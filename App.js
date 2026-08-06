@@ -8,16 +8,136 @@ const TELEGRAM_CHAT_ID = "1328175221";
 const ADMIN_EMAIL = "glinkevichtm@gmail.com";
 
 const LANGUAGES = [
-  { code: 'EN', name: 'English' },
   { code: 'RU', name: 'Русский' },
+  { code: 'EN', name: 'English' },
   { code: 'ES', name: 'Español' },
-  { code: 'FR', name: 'Français' },
   { code: 'DE', name: 'Deutsch' },
-  { code: 'PT', name: 'Português' },
-  { code: 'IT', name: 'Italiano' },
-  { code: 'UA', name: 'Українська' },
+  { code: 'FR', name: 'Français' },
   { code: 'ZH', name: '中文' },
 ];
+
+const TRANSLATIONS = {
+  RU: {
+    heroSub: "Твой личный ИИ-арсенал. Без карт, без подписок, навсегда.",
+    startBtn: "Начать →",
+    regTab: "Создать аккаунт",
+    loginTab: "Войти",
+    namePlace: "Ваше имя",
+    emailPlace: "you@example.com",
+    passPlace: "••••••••",
+    f1Title: "Без карт и подписок",
+    f1Desc: "Бесплатно навсегда. Никаких скрытых платежей и триалов.",
+    f2Title: "Молниеносный отклик",
+    f2Desc: "Минимальная задержка при генерации ответов от нейросетей.",
+    f3Title: "Премиум модели",
+    f3Desc: "Доступ к DeepSeek V3 и Gemini 2.5 без ограничений.",
+    newChat: "Очистить",
+    askPlace: "Спроси о чём угодно...",
+    bugBtn: "💡 Баг",
+    logout: "Выйти",
+    adminBtn: "👑 Админка",
+  },
+  EN: {
+    heroSub: "Your personal AI arsenal. No cards, no subscriptions, forever.",
+    startBtn: "Get Started →",
+    regTab: "Create Account",
+    loginTab: "Sign In",
+    namePlace: "Your name",
+    emailPlace: "you@example.com",
+    passPlace: "••••••••",
+    f1Title: "No Credit Cards",
+    f1Desc: "Free forever. No hidden charges or paid subscriptions.",
+    f2Title: "Lightning Fast",
+    f2Desc: "Ultra-low latency streaming for all AI responses.",
+    f3Title: "Premium Models",
+    f3Desc: "Access DeepSeek V3 and Gemini 2.5 seamless integration.",
+    newChat: "Clear",
+    askPlace: "Ask anything...",
+    bugBtn: "💡 Bug",
+    logout: "Sign Out",
+    adminBtn: "👑 Admin",
+  },
+  ES: {
+    heroSub: "Tu arsenal personal de IA. Sin tarjetas, sin suscripciones, para siempre.",
+    startBtn: "Empezar →",
+    regTab: "Crear cuenta",
+    loginTab: "Iniciar sesión",
+    namePlace: "Tu nombre",
+    emailPlace: "you@example.com",
+    passPlace: "••••••••",
+    f1Title: "Sin tarjetas",
+    f1Desc: "Gratis para siempre. Sin cargos ocultos.",
+    f2Title: "Ultra rápido",
+    f2Desc: "Respuesta instantánea de los modelos de IA.",
+    f3Title: "Modelos Premium",
+    f3Desc: "Acceso a DeepSeek V3 y Gemini 2.5.",
+    newChat: "Limpiar",
+    askPlace: "Pregunta lo que sea...",
+    bugBtn: "💡 Error",
+    logout: "Salir",
+    adminBtn: "👑 Admin",
+  },
+  DE: {
+    heroSub: "Ihr persönliches KI-Arsenal. Keine Karten, keine Abos, für immer.",
+    startBtn: "Starten →",
+    regTab: "Konto erstellen",
+    loginTab: "Anmelden",
+    namePlace: "Ihr Name",
+    emailPlace: "you@example.com",
+    passPlace: "••••••••",
+    f1Title: "Ohne Kreditkarte",
+    f1Desc: "Kostenlos für immer. Keine versteckten Gebühren.",
+    f2Title: "Blitzschnell",
+    f2Desc: "Minimale Verzögerung bei Antworten.",
+    f3Title: "Premium-Modelle",
+    f3Desc: "Zugriff auf DeepSeek V3 und Gemini 2.5.",
+    newChat: "Löschen",
+    askPlace: "Frage etwas...",
+    bugBtn: "💡 Bug",
+    logout: "Abmelden",
+    adminBtn: "👑 Admin",
+  },
+  FR: {
+    heroSub: "Votre arsenal personnel d'IA. Sans carte, sans abonnement, pour toujours.",
+    startBtn: "Commencer →",
+    regTab: "Créer un compte",
+    loginTab: "Connexion",
+    namePlace: "Votre nom",
+    emailPlace: "you@example.com",
+    passPlace: "••••••••",
+    f1Title: "Sans carte bancaire",
+    f1Desc: "Gratuit pour toujours. Aucun frais caché.",
+    f2Title: "Ultra rapide",
+    f2Desc: "Réponses instantanées des modèles d'IA.",
+    f3Title: "Modèles Premium",
+    f3Desc: "Accès à DeepSeek V3 et Gemini 2.5.",
+    newChat: "Effacer",
+    askPlace: "Posez une question...",
+    bugBtn: "💡 Bug",
+    logout: "Déconnexion",
+    adminBtn: "👑 Admin",
+  },
+  ZH: {
+    heroSub: "你的个人人工智能库。无需绑卡，完全免费，永久使用。",
+    startBtn: "开始使用 →",
+    regTab: "创建账户",
+    loginTab: "登录",
+    namePlace: "你的名字",
+    emailPlace: "you@example.com",
+    passPlace: "••••••••",
+    f1Title: "完全免费",
+    f1Desc: "永久免费，没有任何隐藏费用。",
+    f2Title: "极速响应",
+    f2Desc: "AI 模型超低延迟秒回。",
+    f3Title: "顶级 AI 模型",
+    f3Desc: "支持 DeepSeek V3 与 Gemini 2.5。",
+    newChat: "清空",
+    askPlace: "输入任何问题...",
+    bugBtn: "💡 反馈",
+    logout: "退出",
+    adminBtn: "👑 管理员",
+  }
+};
 
 const FREE_MODELS = [
   { id: 'google/gemini-2.5-flash:free', name: 'Gemini 2.5 Flash (Free)' },
@@ -30,8 +150,9 @@ const VIP_MODELS = [
 ];
 
 export default function App() {
-  const [currentLang, setCurrentLang] = useState(LANGUAGES[1]); // Русский
+  const [langCode, setLangCode] = useState('RU');
   const [langDropdown, setLangDropdown] = useState(false);
+  const t = TRANSLATIONS[langCode] || TRANSLATIONS.RU;
 
   const [screen, setScreen] = useState('landing');
   const [authMode, setAuthMode] = useState('register');
@@ -40,40 +161,29 @@ export default function App() {
   const [password, setPassword] = useState('');
   const [userIp, setUserIp] = useState('127.0.0.1');
 
-  // Локальная база пользователей
   const [usersList, setUsersList] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
 
-  // Чат и выбор моделей
   const [selectedModel, setSelectedModel] = useState(FREE_MODELS[0].id);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Модалки
   const [bugModal, setBugModal] = useState(false);
   const [bugText, setBugText] = useState('');
   const [adminModal, setAdminModal] = useState(false);
 
   useEffect(() => {
-    // Получение IP пользователя
     fetch('https://api.ipify.org?format=json')
       .then(res => res.json())
       .then(data => setUserIp(data.ip || '127.0.0.1'))
       .catch(() => setUserIp('127.0.0.1'));
 
-    // Загрузка пользователей
-    const savedUsers = localStorage.getItem('madai_users_db');
+    const savedUsers = localStorage.getItem('madai_users_db_v2');
     let db = savedUsers ? JSON.parse(savedUsers) : [];
-    
-    // Дефолтный админ в базе
-    if (!db.find(u => u.email.toLowerCase() === ADMIN_EMAIL.toLowerCase())) {
-      db.push({ id: '1', name: 'Admin', email: ADMIN_EMAIL, password: 'admin', role: 'admin', ip: '127.0.0.1' });
-    }
     setUsersList(db);
 
-    // Загрузка текущей сессии
-    const savedSession = localStorage.getItem('madai_current_session');
+    const savedSession = localStorage.getItem('madai_current_session_v2');
     if (savedSession) {
       const parsed = JSON.parse(savedSession);
       setCurrentUser(parsed);
@@ -83,7 +193,7 @@ export default function App() {
 
   const saveUsersDb = (newDb) => {
     setUsersList(newDb);
-    localStorage.setItem('madai_users_db', JSON.stringify(newDb));
+    localStorage.setItem('madai_users_db_v2', JSON.stringify(newDb));
   };
 
   const handleAuth = () => {
@@ -94,7 +204,6 @@ export default function App() {
     }
 
     if (authMode === 'register') {
-      // Регистрация
       const exists = usersList.find(u => u.email.toLowerCase() === cleanEmail);
       if (exists) {
         alert("Пользователь с таким email уже зарегистрирован! Попробуйте войти.");
@@ -104,7 +213,7 @@ export default function App() {
       const role = cleanEmail === ADMIN_EMAIL.toLowerCase() ? 'admin' : 'user';
       const newUser = {
         id: Date.now().toString(),
-        name: name || 'Пользователь',
+        name: name || 'User',
         email: cleanEmail,
         password: password,
         role: role,
@@ -114,35 +223,32 @@ export default function App() {
       const updatedDb = [...usersList, newUser];
       saveUsersDb(updatedDb);
       setCurrentUser(newUser);
-      localStorage.setItem('madai_current_session', JSON.stringify(newUser));
+      localStorage.setItem('madai_current_session_v2', JSON.stringify(newUser));
       setScreen('chat');
-      alert("Вы успешно зарегистрированы!");
     } else {
-      // Вход
       const user = usersList.find(u => u.email.toLowerCase() === cleanEmail);
       if (!user) {
-        alert("Пользователь с таким email не найден! Зарегистрируйтесь.");
+        alert("Пользователь не найден! Зарегистрируйтесь.");
         return;
       }
 
       if (user.password !== password) {
-        alert("Пароль не верный!");
+        alert("Неверный пароль!");
         return;
       }
 
-      // Обновляем IP при входе
       user.ip = userIp;
       if (cleanEmail === ADMIN_EMAIL.toLowerCase()) user.role = 'admin';
 
       saveUsersDb(usersList);
       setCurrentUser(user);
-      localStorage.setItem('madai_current_session', JSON.stringify(user));
+      localStorage.setItem('madai_current_session_v2', JSON.stringify(user));
       setScreen('chat');
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('madai_current_session');
+    localStorage.removeItem('madai_current_session_v2');
     setCurrentUser(null);
     setScreen('landing');
   };
@@ -154,7 +260,7 @@ export default function App() {
         const newObj = { ...u, role: nextRole };
         if (currentUser && currentUser.id === targetId) {
           setCurrentUser(newObj);
-          localStorage.setItem('madai_current_session', JSON.stringify(newObj));
+          localStorage.setItem('madai_current_session_v2', JSON.stringify(newObj));
         }
         return newObj;
       }
@@ -191,10 +297,10 @@ export default function App() {
       });
 
       const data = await response.json();
-      const reply = data.choices?.[0]?.message?.content || " Ошибка API ответа.";
+      const reply = data.choices?.[0]?.message?.content || "Ошибка API ответа.";
       setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), text: reply, sender: 'ai' }]);
     } catch (e) {
-      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), text: " Ошибка связи с сервером.", sender: 'ai' }]);
+      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), text: "Ошибка связи с сервером.", sender: 'ai' }]);
     } finally {
       setLoading(false);
     }
@@ -219,37 +325,38 @@ export default function App() {
     }
   };
 
-  // Выпадающее меню языков
-  const LanguageSelector = () => (
-    <View style={{ position: 'relative', zIndex: 999 }}>
-      <TouchableOpacity style={styles.langDropBtn} onPress={() => setLangDropdown(!langDropdown)}>
-        <Text style={{ color: '#fff', fontSize: 13 }}>🌐 {currentLang.name}</Text>
-      </TouchableOpacity>
+  const LanguageSelector = () => {
+    const currentLangObj = LANGUAGES.find(l => l.code === langCode) || LANGUAGES[0];
+    return (
+      <View style={{ position: 'relative', zIndex: 9999 }}>
+        <TouchableOpacity style={styles.langDropBtn} onPress={() => setLangDropdown(!langDropdown)}>
+          <Text style={{ color: '#fff', fontSize: 13, fontWeight: 'bold' }}>🌐 {currentLangObj.name}</Text>
+        </TouchableOpacity>
 
-      {langDropdown && (
-        <View style={styles.langMenu}>
-          <ScrollView style={{ maxHeight: 220 }}>
-            {LANGUAGES.map((item) => (
-              <TouchableOpacity
-                key={item.code}
-                style={styles.langMenuItem}
-                onPress={() => {
-                  setCurrentLang(item);
-                  setLangDropdown(false);
-                }}
-              >
-                <Text style={{ color: item.code === currentLang.code ? '#10b981' : '#a1a1aa', fontWeight: item.code === currentLang.code ? 'bold' : 'normal', fontSize: 13 }}>
-                  {item.name}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-      )}
-    </View>
-  );
+        {langDropdown && (
+          <View style={styles.langMenu}>
+            <ScrollView style={{ maxHeight: 220 }}>
+              {LANGUAGES.map((item) => (
+                <TouchableOpacity
+                  key={item.code}
+                  style={styles.langMenuItem}
+                  onPress={() => {
+                    setLangCode(item.code);
+                    setLangDropdown(false);
+                  }}
+                >
+                  <Text style={{ color: item.code === langCode ? '#10b981' : '#a1a1aa', fontWeight: item.code === langCode ? 'bold' : 'normal', fontSize: 13 }}>
+                    {item.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
+      </View>
+    );
+  };
 
-  // 1. ЛЕНДИНГ
   if (screen === 'landing') {
     return (
       <SafeAreaView style={styles.darkBg}>
@@ -262,24 +369,34 @@ export default function App() {
             <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
               <LanguageSelector />
               <TouchableOpacity style={styles.navBtn} onPress={() => setScreen('auth')}>
-                <Text style={styles.navBtnText}>Начать →</Text>
+                <Text style={styles.navBtnText}>{t.startBtn}</Text>
               </TouchableOpacity>
             </View>
           </View>
 
           <View style={styles.heroSection}>
             <Text style={styles.heroHeader}>MadAI</Text>
-            <Text style={styles.heroSub}>Твой личный ИИ-арсенал. Без карт, без подписок, навсегда.</Text>
+            <Text style={styles.heroSub}>{t.heroSub}</Text>
             <TouchableOpacity style={styles.mainCtaBtn} onPress={() => setScreen('auth')}>
-              <Text style={styles.mainCtaText}>Начать →</Text>
+              <Text style={styles.mainCtaText}>{t.startBtn}</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.gridCards}>
             <View style={styles.featureCard}>
               <Text style={styles.cardIcon}>🛡️</Text>
-              <Text style={styles.cardTitle}>Без карт и подписок</Text>
-              <Text style={styles.cardDesc}>Бесплатно навсегда. Никаких скрытых платежей и триалов.</Text>
+              <Text style={styles.cardTitle}>{t.f1Title}</Text>
+              <Text style={styles.cardDesc}>{t.f1Desc}</Text>
+            </View>
+            <View style={styles.featureCard}>
+              <Text style={styles.cardIcon}>⚡</Text>
+              <Text style={styles.cardTitle}>{t.f2Title}</Text>
+              <Text style={styles.cardDesc}>{t.f2Desc}</Text>
+            </View>
+            <View style={styles.featureCard}>
+              <Text style={styles.cardIcon}>🤖</Text>
+              <Text style={styles.cardTitle}>{t.f3Title}</Text>
+              <Text style={styles.cardDesc}>{t.f3Desc}</Text>
             </View>
           </View>
         </ScrollView>
@@ -287,7 +404,6 @@ export default function App() {
     );
   }
 
-  // 2. АВТОРИЗАЦИЯ (ДИЗАЙН В СТИЛЕ BOLT)
   if (screen === 'auth') {
     return (
       <SafeAreaView style={[styles.darkBg, { justifyContent: 'center', alignItems: 'center' }]}>
@@ -296,45 +412,44 @@ export default function App() {
             <View style={styles.boltIcon}><Text style={styles.boltText}>⚡</Text></View>
             <View>
               <Text style={styles.logoTitle}>MadAI</Text>
-              <Text style={styles.authSub}>Бесплатно навсегда — без карты</Text>
+              <Text style={styles.authSub}>Авторизация</Text>
             </View>
           </View>
 
           <View style={styles.tabContainer}>
             <TouchableOpacity style={[styles.tabBtn, authMode === 'register' && styles.activeTab]} onPress={() => setAuthMode('register')}>
-              <Text style={{ color: authMode === 'register' ? '#fff' : '#71717a', fontSize: 12, fontWeight: 'bold' }}>Создать аккаунт</Text>
+              <Text style={{ color: authMode === 'register' ? '#fff' : '#71717a', fontSize: 12, fontWeight: 'bold' }}>{t.regTab}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={[styles.tabBtn, authMode === 'login' && styles.activeTab]} onPress={() => setAuthMode('login')}>
-              <Text style={{ color: authMode === 'login' ? '#fff' : '#71717a', fontSize: 12, fontWeight: 'bold' }}>Войти</Text>
+              <Text style={{ color: authMode === 'login' ? '#fff' : '#71717a', fontSize: 12, fontWeight: 'bold' }}>{t.loginTab}</Text>
             </TouchableOpacity>
           </View>
 
           {authMode === 'register' && (
             <View style={styles.inputWrapper}>
-              <Text style={styles.inputLabel}>Отображаемое имя</Text>
-              <TextInput style={styles.inputField} placeholder="Ваше имя" placeholderTextColor="#52525b" value={name} onChangeText={setName} />
+              <Text style={styles.inputLabel}>{t.namePlace}</Text>
+              <TextInput style={styles.inputField} placeholder={t.namePlace} placeholderTextColor="#52525b" value={name} onChangeText={setName} />
             </View>
           )}
 
           <View style={styles.inputWrapper}>
             <Text style={styles.inputLabel}>Почта</Text>
-            <TextInput style={styles.inputField} placeholder="you@example.com" placeholderTextColor="#52525b" value={email} onChangeText={setEmail} autoCapitalize="none" />
+            <TextInput style={styles.inputField} placeholder={t.emailPlace} placeholderTextColor="#52525b" value={email} onChangeText={setEmail} autoCapitalize="none" />
           </View>
 
           <View style={styles.inputWrapper}>
             <Text style={styles.inputLabel}>Пароль</Text>
-            <TextInput style={styles.inputField} placeholder="••••••••" placeholderTextColor="#52525b" value={password} onChangeText={setPassword} secureTextEntry />
+            <TextInput style={styles.inputField} placeholder={t.passPlace} placeholderTextColor="#52525b" value={password} onChangeText={setPassword} secureTextEntry />
           </View>
 
           <TouchableOpacity style={styles.mainCtaBtn} onPress={handleAuth}>
-            <Text style={styles.mainCtaText}>{authMode === 'register' ? 'Создать аккаунт' : 'Войти'}</Text>
+            <Text style={styles.mainCtaText}>{authMode === 'register' ? t.regTab : t.loginTab}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
   }
 
-  // 3. ЧАТ И ВЫБОР МОДЕЛЕЙ
   const isUserVipOrAdmin = currentUser?.role === 'admin' || currentUser?.role === 'vip';
 
   return (
@@ -352,19 +467,18 @@ export default function App() {
           <LanguageSelector />
           {currentUser?.role === 'admin' && (
             <TouchableOpacity style={styles.adminBadgeBtn} onPress={() => setAdminModal(true)}>
-              <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>👑 Админка</Text>
+              <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>{t.adminBtn}</Text>
             </TouchableOpacity>
           )}
           <TouchableOpacity style={styles.smallBtn} onPress={() => setBugModal(true)}>
-            <Text style={{ color: '#fff', fontSize: 11 }}>💡 Баг</Text>
+            <Text style={{ color: '#fff', fontSize: 11 }}>{t.bugBtn}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.smallBtn} onPress={handleLogout}>
-            <Text style={{ color: '#ef4444', fontSize: 11 }}>Выйти</Text>
+            <Text style={{ color: '#ef4444', fontSize: 11 }}>{t.logout}</Text>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* Панель выбора ИИ-моделей */}
       <View style={styles.modelBar}>
         <Text style={{ color: '#71717a', fontSize: 11, marginRight: 8 }}>Модель:</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
@@ -411,13 +525,13 @@ export default function App() {
 
       <View style={styles.bottomBar}>
         <TouchableOpacity style={styles.smallBtn} onPress={() => setMessages([])}>
-          <Text style={{ color: '#a1a1aa', fontSize: 11 }}>Очистить</Text>
+          <Text style={{ color: '#a1a1aa', fontSize: 11 }}>{t.newChat}</Text>
         </TouchableOpacity>
         <TextInput
           style={styles.chatInput}
           value={input}
           onChangeText={setInput}
-          placeholder="Спроси о чём угодно..."
+          placeholder={t.askPlace}
           placeholderTextColor="#52525b"
         />
         <TouchableOpacity style={styles.sendBtn} onPress={handleSend} disabled={loading}>
@@ -425,7 +539,6 @@ export default function App() {
         </TouchableOpacity>
       </View>
 
-      {/* АДМИНКАС СПИСКОМ ЮЗЕРОВ И ИХ IP */}
       <Modal visible={adminModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
@@ -456,7 +569,6 @@ export default function App() {
         </View>
       </Modal>
 
-      {/* Модалка обратной связи */}
       <Modal visible={bugModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
@@ -489,9 +601,8 @@ const styles = StyleSheet.create({
   boltText: { color: '#09090b', fontWeight: 'bold', fontSize: 16 },
   logoTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
 
-  // Выпадающий список языков в стиле Bolt
   langDropBtn: { backgroundColor: '#121215', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: '#27272a' },
-  langMenu: { position: 'absolute', top: 38, right: 0, backgroundColor: '#121215', borderRadius: 8, borderWidth: 1, borderColor: '#27272a', width: 140, padding: 4 },
+  langMenu: { position: 'absolute', top: 38, right: 0, backgroundColor: '#121215', borderRadius: 8, borderWidth: 1, borderColor: '#27272a', width: 140, padding: 4, elevation: 5 },
   langMenuItem: { padding: 8, borderRadius: 6 },
 
   navBtn: { backgroundColor: '#18181b', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: '#27272a' },
@@ -503,13 +614,12 @@ const styles = StyleSheet.create({
   mainCtaBtn: { backgroundColor: '#10b981', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 8, width: '100%', alignItems: 'center' },
   mainCtaText: { color: '#09090b', fontWeight: 'bold', fontSize: 16 },
 
-  gridCards: { flexDirection: 'row', gap: 12, flexWrap: 'wrap', justifyContent: 'center', maxWidth: 900 },
-  featureCard: { backgroundColor: '#121215', padding: 20, borderRadius: 12, borderWidth: 1, borderColor: '#1f1f23', width: 300 },
+  gridCards: { flexDirection: 'row', gap: 12, flexWrap: 'wrap', justifyContent: 'center', maxWidth: 900, marginTop: 20 },
+  featureCard: { backgroundColor: '#121215', padding: 20, borderRadius: 12, borderWidth: 1, borderColor: '#1f1f23', width: 260 },
   cardIcon: { fontSize: 22, marginBottom: 8 },
   cardTitle: { color: '#fff', fontWeight: 'bold', fontSize: 15, marginBottom: 4 },
   cardDesc: { color: '#71717a', fontSize: 12, lineHeight: 18 },
 
-  // Форма авторизации Bolt
   authCard: { backgroundColor: '#121215', padding: 24, borderRadius: 16, borderWidth: 1, borderColor: '#1f1f23', width: '90%', maxWidth: 380 },
   authSub: { color: '#71717a', fontSize: 11 },
   tabContainer: { flexDirection: 'row', marginVertical: 16, backgroundColor: '#09090b', borderRadius: 8, padding: 3 },
