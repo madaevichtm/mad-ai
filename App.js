@@ -29,7 +29,6 @@ const VIP_MODELS = [
 
 export default function App() {
   const [langCode, setLangCode] = useState('RU');
-  const [langDropdown, setLangDropdown] = useState(false);
 
   const [screen, setScreen] = useState('landing');
   const [authMode, setAuthMode] = useState('register');
@@ -62,13 +61,13 @@ export default function App() {
 
   const otpInputs = useRef([]);
 
-  // Авто-внедрение фонового волнистого стиля в браузер
+  // Железобетонный инжект фона с волнами
   useEffect(() => {
     if (typeof document !== 'undefined') {
-      let styleTag = document.getElementById('madai-wave-theme');
+      let styleTag = document.getElementById('madai-wave-bg-style');
       if (!styleTag) {
         styleTag = document.createElement('style');
-        styleTag.id = 'madai-wave-theme';
+        styleTag.id = 'madai-wave-bg-style';
         document.head.appendChild(styleTag);
       }
       styleTag.innerHTML = `
@@ -76,14 +75,21 @@ export default function App() {
           background-color: #03060a !important;
           margin: 0;
           padding: 0;
+          min-height: 100vh;
         }
         body {
           background-image: 
-            radial-gradient(circle at 50% 25%, rgba(14, 45, 55, 0.45) 0%, rgba(3, 6, 10, 0.98) 75%),
-            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='1200' viewBox='0 0 1200 1200'%3E%3Cpath fill='none' stroke='%2310b981' stroke-width='0.5' opacity='0.2' d='M0,200 C300,100 600,350 1200,150 M0,450 C400,200 800,600 1200,400 M0,750 C500,550 900,850 1200,700' /%3E%3Cpath fill='none' stroke='%2338bdf8' stroke-width='0.4' opacity='0.15' d='M0,300 C400,500 800,150 1200,350' /%3E%3Ccircle cx='250' cy='220' r='1.5' fill='%2310b981' opacity='0.4'/%3E%3Ccircle cx='850' cy='380' r='2' fill='%2310b981' opacity='0.3'/%3E%3Ccircle cx='600' cy='720' r='1.5' fill='%2338bdf8' opacity='0.35'/%3E%3C/svg%3E") !important;
+            radial-gradient(circle at 50% 20%, rgba(14, 45, 55, 0.5) 0%, rgba(3, 6, 10, 0.98) 75%),
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='1200' viewBox='0 0 1200 1200'%3E%3Cpath fill='none' stroke='%2310b981' stroke-width='0.6' opacity='0.22' d='M0,200 C300,100 600,350 1200,150 M0,450 C400,200 800,600 1200,400 M0,750 C500,550 900,850 1200,700' /%3E%3Cpath fill='none' stroke='%2338bdf8' stroke-width='0.4' opacity='0.15' d='M0,300 C400,500 800,150 1200,350' /%3E%3Ccircle cx='250' cy='220' r='1.5' fill='%2310b981' opacity='0.4'/%3E%3Ccircle cx='850' cy='380' r='2' fill='%2310b981' opacity='0.3'/%3E%3Ccircle cx='600' cy='720' r='1.5' fill='%2338bdf8' opacity='0.35'/%3E%3C/svg%3E") !important;
           background-repeat: no-repeat, repeat !important;
           background-position: center top, center center !important;
           background-size: cover, 1000px 1000px !important;
+        }
+        .native-lang-select {
+          position: absolute;
+          top: 0; left: 0; width: 100%; height: 100%;
+          opacity: 0;
+          cursor: pointer;
         }
       `;
     }
@@ -101,11 +107,11 @@ export default function App() {
       .then(data => setUserIp(data.ip || '127.0.0.1'))
       .catch(() => setUserIp('127.0.0.1'));
 
-    const savedUsers = localStorage.getItem('madai_users_db_v7');
+    const savedUsers = localStorage.getItem('madai_users_db_v8');
     let db = savedUsers ? JSON.parse(savedUsers) : [];
     setUsersList(db);
 
-    const savedSession = localStorage.getItem('madai_current_session_v7');
+    const savedSession = localStorage.getItem('madai_current_session_v8');
     if (savedSession) {
       const parsed = JSON.parse(savedSession);
       setCurrentUser(parsed);
@@ -115,7 +121,7 @@ export default function App() {
 
   const saveUsersDb = (newDb) => {
     setUsersList(newDb);
-    localStorage.setItem('madai_users_db_v7', JSON.stringify(newDb));
+    localStorage.setItem('madai_users_db_v8', JSON.stringify(newDb));
   };
 
   const getPasswordStrength = () => {
@@ -218,7 +224,7 @@ export default function App() {
 
       saveUsersDb(usersList);
       setCurrentUser(user);
-      localStorage.setItem('madai_current_session_v7', JSON.stringify(user));
+      localStorage.setItem('madai_current_session_v8', JSON.stringify(user));
       setScreen('chat');
     }
   };
@@ -229,7 +235,7 @@ export default function App() {
       const updatedDb = [...usersList, pendingUser];
       saveUsersDb(updatedDb);
       setCurrentUser(pendingUser);
-      localStorage.setItem('madai_current_session_v7', JSON.stringify(pendingUser));
+      localStorage.setItem('madai_current_session_v8', JSON.stringify(pendingUser));
       setPendingUser(null);
       setScreen('chat');
       showToast("Почта подтверждена! Добро пожаловать.");
@@ -249,7 +255,7 @@ export default function App() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('madai_current_session_v7');
+    localStorage.removeItem('madai_current_session_v8');
     setCurrentUser(null);
     setScreen('landing');
   };
@@ -261,7 +267,7 @@ export default function App() {
         const newObj = { ...u, role: nextRole };
         if (currentUser && currentUser.id === targetId) {
           setCurrentUser(newObj);
-          localStorage.setItem('madai_current_session_v7', JSON.stringify(newObj));
+          localStorage.setItem('madai_current_session_v8', JSON.stringify(newObj));
         }
         return newObj;
       }
@@ -326,39 +332,26 @@ export default function App() {
     }
   };
 
-  // Компонент переключения языков
+  // Переключатель языков
   const LanguageSelector = () => {
     const currentLangObj = LANGUAGES.find(l => l.code === langCode) || LANGUAGES[0];
     return (
-      <View style={{ zIndex: 99999 }}>
-        <TouchableOpacity 
-          style={styles.langDropBtn} 
-          activeOpacity={0.7} 
-          onPress={() => setLangDropdown(!langDropdown)}
-        >
-          <Text style={{ color: '#fff', fontSize: 13 }}>🌐 Язык: {currentLangObj.code}</Text>
-        </TouchableOpacity>
-
-        {langDropdown && (
-          <View style={styles.langMenu}>
-            <ScrollView style={{ maxHeight: 200 }} nestedScrollEnabled>
-              {LANGUAGES.map((item) => (
-                <TouchableOpacity
-                  key={item.code}
-                  style={styles.langMenuItem}
-                  activeOpacity={0.6}
-                  onPress={() => {
-                    setLangCode(item.code);
-                    setLangDropdown(false);
-                  }}
-                >
-                  <Text style={{ color: item.code === langCode ? '#10b981' : '#9ca3af', fontSize: 13, fontWeight: item.code === langCode ? 'bold' : 'normal' }}>
-                    {item.name}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-          </View>
+      <View style={styles.langDropBtn}>
+        <Text style={{ color: '#fff', fontSize: 13, pointerEvents: 'none' }}>
+          🌐 Язык: {currentLangObj.code}
+        </Text>
+        {typeof document !== 'undefined' && (
+          <select 
+            className="native-lang-select" 
+            value={langCode} 
+            onChange={(e) => setLangCode(e.target.value)}
+          >
+            {LANGUAGES.map(l => (
+              <option key={l.code} value={l.code} style={{ background: '#090d12', color: '#fff' }}>
+                {l.name} ({l.code})
+              </option>
+            ))}
+          </select>
         )}
       </View>
     );
@@ -424,9 +417,10 @@ export default function App() {
           </View>
         </ScrollView>
 
-        <View style={styles.footerBarCenter}>
+        {/* Разнесенный футер */}
+        <View style={styles.footerBarFullWidth}>
           <Text style={styles.footerText}>© 2026 MadAI. All rights reserved.</Text>
-          <View style={{ flexDirection: 'row', gap: 20 }}>
+          <View style={styles.footerRightLinks}>
             <TouchableOpacity><Text style={styles.footerLink}>Политика приватности</Text></TouchableOpacity>
             <TouchableOpacity><Text style={styles.footerLink}>Условия использования</Text></TouchableOpacity>
           </View>
@@ -503,9 +497,9 @@ export default function App() {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.footerBarAbsoluteCenter}>
+        <View style={styles.footerBarFullWidth}>
           <Text style={styles.footerText}>© 2026 MadAI. All rights reserved.</Text>
-          <View style={{ flexDirection: 'row', gap: 20 }}>
+          <View style={styles.footerRightLinks}>
             <TouchableOpacity><Text style={styles.footerLink}>Политика приватности</Text></TouchableOpacity>
             <TouchableOpacity><Text style={styles.footerLink}>Условия использования</Text></TouchableOpacity>
           </View>
@@ -702,14 +696,21 @@ export default function App() {
 const styles = StyleSheet.create({
   transparentBg: { flex: 1, backgroundColor: 'transparent' },
 
-  landingContentCenter: { padding: 16, alignItems: 'center', justifyContent: 'center', minHeight: '82%', paddingBottom: 90 },
+  landingContentCenter: { padding: 16, alignItems: 'center', justifyContent: 'center', minHeight: '82%', paddingBottom: 100 },
   
-  topNavCenter: { width: '100%', maxWidth: 1100, alignSelf: 'center', flexDirection: 'row', justifyContent: 'flex-start', padding: 20, zIndex: 99999 },
-  topNavAbsoluteCenter: { position: 'absolute', top: 20, left: 0, right: 0, width: '100%', maxWidth: 1100, alignSelf: 'center', flexDirection: 'row', justifyContent: 'flex-start', paddingHorizontal: 20, zIndex: 99999 },
+  topNavCenter: { width: '100%', paddingHorizontal: 32, paddingVertical: 20, zIndex: 99999 },
+  topNavAbsoluteCenter: { position: 'absolute', top: 0, left: 0, right: 0, paddingHorizontal: 32, paddingVertical: 20, zIndex: 99999 },
 
-  langDropBtn: { backgroundColor: 'rgba(15, 23, 42, 0.75)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#1e293b' },
-  langMenu: { position: 'absolute', top: 45, left: 0, backgroundColor: '#090d12', borderRadius: 8, borderWidth: 1, borderColor: '#1e293b', width: 150, padding: 4, elevation: 20, zIndex: 99999 },
-  langMenuItem: { padding: 10, borderRadius: 6 },
+  langDropBtn: { 
+    position: 'relative',
+    backgroundColor: 'rgba(15, 23, 42, 0.85)', 
+    paddingHorizontal: 16, 
+    paddingVertical: 9, 
+    borderRadius: 20, 
+    borderWidth: 1, 
+    borderColor: '#1e293b',
+    alignSelf: 'flex-start'
+  },
 
   heroSection: { alignItems: 'center', marginVertical: 35, maxWidth: 700, width: '100%' },
   heroHeader: { color: '#ffffff', fontSize: 72, fontWeight: '900', textAlign: 'center', letterSpacing: 2 },
@@ -743,42 +744,30 @@ const styles = StyleSheet.create({
   cardTitle: { color: '#ffffff', fontWeight: 'bold', fontSize: 13, letterSpacing: 1, marginBottom: 10 },
   cardDesc: { color: '#9ca3af', fontSize: 12, lineHeight: 20 },
 
-  footerBarCenter: { 
+  // Разнесенный футер по бокам с четкой полосой
+  footerBarFullWidth: { 
     position: 'absolute', 
     bottom: 0, 
     left: 0, 
     right: 0, 
     flexDirection: 'row', 
-    justify: 'space-between', 
-    paddingVertical: 18, 
-    paddingHorizontal: 24,
+    justifyContent: 'space-between', 
+    alignItems: 'center',
+    paddingVertical: 20, 
+    paddingHorizontal: 40,
     borderTopWidth: 1, 
     borderTopColor: 'rgba(255, 255, 255, 0.15)', 
-    width: '100%', 
-    maxWidth: 1100, 
-    alignSelf: 'center',
-    backgroundColor: 'rgba(3, 6, 10, 0.9)'
+    backgroundColor: 'rgba(3, 6, 10, 0.95)'
   },
-  footerBarAbsoluteCenter: { 
-    position: 'absolute', 
-    bottom: 0, 
-    left: 0, 
-    right: 0, 
-    flexDirection: 'row', 
-    justify: 'space-between', 
-    width: '100%', 
-    maxWidth: 1100, 
-    alignSelf: 'center', 
-    paddingVertical: 18, 
-    paddingHorizontal: 24,
-    borderTopWidth: 1, 
-    borderTopColor: 'rgba(255, 255, 255, 0.15)',
-    backgroundColor: 'rgba(3, 6, 10, 0.9)'
+  footerRightLinks: {
+    flexDirection: 'row',
+    gap: 24,
+    alignItems: 'center'
   },
   footerText: { color: '#9ca3af', fontSize: 12 },
   footerLink: { color: '#ffffff', fontSize: 12, textDecorationLine: 'underline' },
 
-  toastContainer: { position: 'absolute', bottom: 70, alignSelf: 'center', backgroundColor: '#10b981', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20, zIndex: 999999, boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)' },
+  toastContainer: { position: 'absolute', bottom: 80, alignSelf: 'center', backgroundColor: '#10b981', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20, zIndex: 999999, boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)' },
   toastText: { color: '#000', fontWeight: 'bold', fontSize: 13 },
 
   authCardGlow: { backgroundColor: 'rgba(8, 15, 22, 0.92)', padding: 30, borderRadius: 16, borderWidth: 1, borderColor: '#1e293b', width: '90%', maxWidth: 420, boxShadow: '0 0 30px rgba(0,0,0,0.6)' },
