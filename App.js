@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, Modal, SafeAreaView, ScrollView, Animated } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, Modal, SafeAreaView, ScrollView } from 'react-native';
 
 const OPENROUTER_API_KEY = "sk-or-v1-cf090582aa70565603ee80882ad90c9b0c797c27de40cacc70"; 
 const TELEGRAM_BOT_TOKEN = "8989304260:AAFT1zUOYHybijCklZSrJOtazpylsNWnBXw"; 
 const TELEGRAM_CHAT_ID = "1328175221";
 
-// Берём ключ из переменной Vercel или используем новый резервный
-const RESEND_API_KEY = process.env.REACT_APP_RESEND_API_KEY || "re_TFRWMQXn_S6GTRUGUqitGtzART4ytYv7q";
+const RESEND_API_KEY = process.env.REACT_APP_RESEND_API_KEY || "";
 const ADMIN_EMAIL = "glinkevichtm@gmail.com";
 
 const LANGUAGES = [
@@ -32,8 +31,8 @@ export default function App() {
   const [langCode, setLangCode] = useState('RU');
   const [langDropdown, setLangDropdown] = useState(false);
 
-  const [screen, setScreen] = useState('landing'); // 'landing' | 'auth' | 'verify' | 'chat'
-  const [authMode, setAuthMode] = useState('register'); // 'register' | 'login'
+  const [screen, setScreen] = useState('landing');
+  const [authMode, setAuthMode] = useState('register');
   
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -42,26 +41,21 @@ export default function App() {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [userIp, setUserIp] = useState('127.0.0.1');
 
-  // Кастомные всплывающие уведомления (Toast)
   const [toastMessage, setToastMessage] = useState('');
   const [toastVisible, setToastVisible] = useState(false);
 
-  // OTP
   const [otpCode, setOtpCode] = useState(['', '', '', '', '', '']);
   const [sentCode, setSentCode] = useState('');
   const [pendingUser, setPendingUser] = useState(null);
 
-  // DB & Session
   const [usersList, setUsersList] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
 
-  // Chat
   const [selectedModel, setSelectedModel] = useState(FREE_MODELS[0].id);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Modals
   const [bugModal, setBugModal] = useState(false);
   const [bugText, setBugText] = useState('');
   const [adminModal, setAdminModal] = useState(false);
@@ -71,9 +65,7 @@ export default function App() {
   const showToast = (msg) => {
     setToastMessage(msg);
     setToastVisible(true);
-    setTimeout(() => {
-      setToastVisible(false);
-    }, 3500);
+    setTimeout(() => setToastVisible(false), 3500);
   };
 
   useEffect(() => {
@@ -82,11 +74,11 @@ export default function App() {
       .then(data => setUserIp(data.ip || '127.0.0.1'))
       .catch(() => setUserIp('127.0.0.1'));
 
-    const savedUsers = localStorage.getItem('madai_users_db_v4');
+    const savedUsers = localStorage.getItem('madai_users_db_v5');
     let db = savedUsers ? JSON.parse(savedUsers) : [];
     setUsersList(db);
 
-    const savedSession = localStorage.getItem('madai_current_session_v4');
+    const savedSession = localStorage.getItem('madai_current_session_v5');
     if (savedSession) {
       const parsed = JSON.parse(savedSession);
       setCurrentUser(parsed);
@@ -96,7 +88,7 @@ export default function App() {
 
   const saveUsersDb = (newDb) => {
     setUsersList(newDb);
-    localStorage.setItem('madai_users_db_v4', JSON.stringify(newDb));
+    localStorage.setItem('madai_users_db_v5', JSON.stringify(newDb));
   };
 
   const getPasswordStrength = () => {
@@ -119,14 +111,14 @@ export default function App() {
           'Authorization': `Bearer ${RESEND_API_KEY}`
         },
         body: JSON.stringify({
-          from: 'MadAI <no-reply@madlinov.xyz>',
+          from: 'onboarding@resend.dev',
           to: [targetEmail],
           subject: 'Код подтверждения регистрации MadAI',
           html: `
-            <div style="background-color: #05050a; color: #ffffff; padding: 30px; font-family: sans-serif; border-radius: 12px; border: 1px solid #10b981;">
+            <div style="background-color: #060b0e; color: #ffffff; padding: 30px; font-family: sans-serif; border-radius: 12px; border: 1px solid #10b981;">
               <h2 style="color: #10b981; margin-bottom: 10px;">MadAI Verification</h2>
               <p style="font-size: 14px; color: #a1a1aa;">Ваш 6-значный код для подтверждения почты:</p>
-              <div style="background: #0d0e15; padding: 18px; border-radius: 8px; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #10b981; text-align: center; margin: 20px 0; border: 1px solid #1f2937;">
+              <div style="background: #0c1419; padding: 18px; border-radius: 8px; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #10b981; text-align: center; margin: 20px 0; border: 1px solid #1f2937;">
                 ${code}
               </div>
               <p style="font-size: 12px; color: #6b7280;">Если вы не регистрировались в MadAI, просто проигнорируйте это письмо.</p>
@@ -201,7 +193,7 @@ export default function App() {
 
       saveUsersDb(usersList);
       setCurrentUser(user);
-      localStorage.setItem('madai_current_session_v4', JSON.stringify(user));
+      localStorage.setItem('madai_current_session_v5', JSON.stringify(user));
       setScreen('chat');
     }
   };
@@ -212,7 +204,7 @@ export default function App() {
       const updatedDb = [...usersList, pendingUser];
       saveUsersDb(updatedDb);
       setCurrentUser(pendingUser);
-      localStorage.setItem('madai_current_session_v4', JSON.stringify(pendingUser));
+      localStorage.setItem('madai_current_session_v5', JSON.stringify(pendingUser));
       setPendingUser(null);
       setScreen('chat');
       showToast("Почта подтверждена! Добро пожаловать.");
@@ -232,7 +224,7 @@ export default function App() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('madai_current_session_v4');
+    localStorage.removeItem('madai_current_session_v5');
     setCurrentUser(null);
     setScreen('landing');
   };
@@ -244,7 +236,7 @@ export default function App() {
         const newObj = { ...u, role: nextRole };
         if (currentUser && currentUser.id === targetId) {
           setCurrentUser(newObj);
-          localStorage.setItem('madai_current_session_v4', JSON.stringify(newObj));
+          localStorage.setItem('madai_current_session_v5', JSON.stringify(newObj));
         }
         return newObj;
       }
@@ -341,7 +333,6 @@ export default function App() {
     );
   };
 
-  // Toast
   const ToastNotice = () => {
     if (!toastVisible) return null;
     return (
@@ -351,50 +342,65 @@ export default function App() {
     );
   };
 
-  // 1. ЛЕНДИНГ
+  // 1. ЛЕНДИНГ С ЭСТЕТИКОЙ ВВОДНОГО СКРИНА
   if (screen === 'landing') {
     return (
-      <SafeAreaView style={styles.darkBg}>
+      <SafeAreaView style={styles.darkBgWave}>
         <ToastNotice />
+        
+        {/* Шапка с языком и онлайн-статусом */}
         <View style={styles.topNavCenter}>
           <LanguageSelector />
+          <View style={styles.statusBadge}>
+            <Text style={{ color: '#9ca3af', fontSize: 13 }}>Статус: Онлайн</Text>
+            <View style={styles.greenDotGlow} />
+          </View>
         </View>
 
         <ScrollView contentContainerStyle={styles.landingContentCenter}>
           <View style={styles.heroSection}>
             <Text style={styles.heroHeader}>MadAI</Text>
-            <Text style={styles.heroSub}>Твой личный ИИ-арсенал. Премиум-доступ для всех. Скрытая мощь, доступная каждому.</Text>
-            <TouchableOpacity style={styles.mainCtaBtnGlow} onPress={() => setScreen('auth')}>
-              <Text style={styles.mainCtaText}>Начать →</Text>
+            <Text style={styles.heroSub}>
+              Твой личный ИИ-арсенал. Премиум-доступ для всех. Скрытая мощь, доступная каждому.
+            </Text>
+            
+            <TouchableOpacity style={styles.heroButtonGlow} onPress={() => setScreen('auth')}>
+              <Text style={styles.heroButtonText}>Начать →</Text>
             </TouchableOpacity>
           </View>
 
           <Text style={styles.sectionTitle}>ПРЕИМУЩЕСТВА MadAI</Text>
 
           <View style={styles.gridCardsCenter}>
-            <View style={styles.featureCardGlow}>
+            <View style={styles.featureCardWave}>
               <Text style={styles.cardIcon}>🛡️ 🎁</Text>
               <Text style={styles.cardTitle}>БАЗОВЫЙ ДОСТУП.</Text>
-              <Text style={styles.cardDesc}>Мощные ИИ-модели — бесплатно. Полный доступ к ключевым возможностям.</Text>
+              <Text style={styles.cardDesc}>
+                Мощные ИИ-модели — бесплатно. Полный доступ к ключевым возможностям.
+              </Text>
             </View>
 
-            <View style={styles.featureCardGlow}>
+            <View style={styles.featureCardWave}>
               <Text style={styles.cardIcon}>🔒</Text>
               <Text style={styles.cardTitle}>АБСОЛЮТНАЯ ПРИВАТНОСТЬ.</Text>
-              <Text style={styles.cardDesc}>Полная анонимность. Твои запросы остаются в тени. Ноль логов.</Text>
+              <Text style={styles.cardDesc}>
+                Полная анонимность. Твои запросы остаются в тени. Ноль логов.
+              </Text>
             </View>
 
-            <View style={styles.featureCardGlow}>
+            <View style={styles.featureCardWave}>
               <Text style={styles.cardIcon}>⏱️</Text>
               <Text style={styles.cardTitle}>ГЛУБОКАЯ КАЛИБРОВКА.</Text>
-              <Text style={styles.cardDesc}>Настраивайте ИИ без скрытых корпоративных фильтров. Полная свобода и чистая производительность.</Text>
+              <Text style={styles.cardDesc}>
+                Настраивайте ИИ без скрытых корпоративных фильтров. Полная свобода и чистая производительность.
+              </Text>
             </View>
           </View>
         </ScrollView>
 
         <View style={styles.footerBarCenter}>
           <Text style={styles.footerText}>© 2026 MadAI. All rights reserved.</Text>
-          <View style={{ flexDirection: 'row', gap: 12 }}>
+          <View style={{ flexDirection: 'row', gap: 16 }}>
             <Text style={styles.footerLink}>Политика приватности</Text>
             <Text style={styles.footerLink}>Условия использования</Text>
           </View>
@@ -407,10 +413,14 @@ export default function App() {
   if (screen === 'auth') {
     const strength = getPasswordStrength();
     return (
-      <SafeAreaView style={[styles.darkBg, { justifyContent: 'center', alignItems: 'center' }]}>
+      <SafeAreaView style={[styles.darkBgWave, { justifyContent: 'center', alignItems: 'center' }]}>
         <ToastNotice />
         <View style={styles.topNavAbsoluteCenter}>
           <LanguageSelector />
+          <View style={styles.statusBadge}>
+            <Text style={{ color: '#9ca3af', fontSize: 13 }}>Статус: Онлайн</Text>
+            <View style={styles.greenDotGlow} />
+          </View>
         </View>
 
         <View style={styles.authCardGlow}>
@@ -419,13 +429,13 @@ export default function App() {
           {authMode === 'register' && (
             <View style={styles.inputWrapper}>
               <Text style={styles.inputLabel}>Имя</Text>
-              <TextInput style={styles.inputField} placeholder="Введите ваше имя" placeholderTextColor="#52525b" value={name} onChangeText={setName} />
+              <TextInput style={styles.inputField} placeholder="Введите ваше имя" placeholderTextColor="#4b5563" value={name} onChangeText={setName} />
             </View>
           )}
 
           <View style={styles.inputWrapper}>
             <Text style={styles.inputLabel}>Почта</Text>
-            <TextInput style={styles.inputField} placeholder="Введите ваш e-mail" placeholderTextColor="#52525b" value={email} onChangeText={setEmail} autoCapitalize="none" />
+            <TextInput style={styles.inputField} placeholder="Введите ваш e-mail" placeholderTextColor="#4b5563" value={email} onChangeText={setEmail} autoCapitalize="none" />
           </View>
 
           <View style={styles.inputWrapper}>
@@ -435,7 +445,7 @@ export default function App() {
                 <Text style={{ color: strength.color, fontSize: 11, fontWeight: 'bold' }}>{strength.label}</Text>
               )}
             </View>
-            <TextInput style={styles.inputField} placeholder="Введите пароль" placeholderTextColor="#52525b" value={password} onChangeText={setPassword} secureTextEntry />
+            <TextInput style={styles.inputField} placeholder="Введите пароль" placeholderTextColor="#4b5563" value={password} onChangeText={setPassword} secureTextEntry />
             {authMode === 'register' && (
               <View style={styles.strengthBarBg}>
                 <View style={[styles.strengthBarFill, { width: `${(strength.score / 3) * 100}%`, backgroundColor: strength.color }]} />
@@ -447,45 +457,45 @@ export default function App() {
             <>
               <View style={styles.inputWrapper}>
                 <Text style={styles.inputLabel}>Подтвердить пароль</Text>
-                <TextInput style={styles.inputField} placeholder="Повторите пароль" placeholderTextColor="#52525b" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry />
+                <TextInput style={styles.inputField} placeholder="Повторите пароль" placeholderTextColor="#4b5563" value={confirmPassword} onChangeText={setConfirmPassword} secureTextEntry />
               </View>
 
               <TouchableOpacity style={styles.checkboxRow} onPress={() => setAgreeTerms(!agreeTerms)}>
                 <View style={[styles.checkbox, agreeTerms && styles.checkboxActive]} />
-                <Text style={{ color: '#a1a1aa', fontSize: 11, flex: 1 }}>
-                  Я принимаю <Text style={{ color: '#3b82f6' }}>Условия использования</Text> и <Text style={{ color: '#3b82f6' }}>Политику приватности</Text>
+                <Text style={{ color: '#9ca3af', fontSize: 11, flex: 1 }}>
+                  Я принимаю <Text style={{ color: '#38bdf8' }}>Условия использования</Text> и <Text style={{ color: '#38bdf8' }}>Политику приватности</Text>
                 </Text>
               </TouchableOpacity>
             </>
           )}
 
-          <TouchableOpacity style={styles.mainCtaBtnGlow} onPress={handleStartAuth}>
-            <Text style={styles.mainCtaText}>{authMode === 'register' ? 'Создать аккаунт →' : 'Войти →'}</Text>
+          <TouchableOpacity style={styles.heroButtonGlow} onPress={handleStartAuth}>
+            <Text style={styles.heroButtonText}>{authMode === 'register' ? 'Создать аккаунт →' : 'Войти →'}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={{ marginTop: 16, alignItems: 'center' }} onPress={() => setAuthMode(authMode === 'register' ? 'login' : 'register')}>
-            <Text style={{ color: '#a1a1aa', fontSize: 12 }}>
+            <Text style={{ color: '#9ca3af', fontSize: 12 }}>
               {authMode === 'register' ? 'Уже есть аккаунт? ' : 'Ещё нет аккаунта? '}
-              <Text style={{ color: '#3b82f6', fontWeight: 'bold' }}>[{authMode === 'register' ? 'Войти' : 'Создать'}]</Text>
+              <Text style={{ color: '#38bdf8', fontWeight: 'bold' }}>[{authMode === 'register' ? 'Войти' : 'Создать'}]</Text>
             </Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.footerBarAbsoluteCenter}>
           <Text style={styles.footerText}>© 2026 MadAI. All rights reserved.</Text>
-          <View style={{ flexDirection: 'row', gap: 12 }}>
-            <Text style={styles.footerLink}>Privacy Policy</Text>
-            <Text style={styles.footerLink}>Terms of Use</Text>
+          <View style={{ flexDirection: 'row', gap: 16 }}>
+            <Text style={styles.footerLink}>Политика приватности</Text>
+            <Text style={styles.footerLink}>Условия использования</Text>
           </View>
         </View>
       </SafeAreaView>
     );
   }
 
-  // 3. OTP ВВОД КОДА
+  // 3. OTP
   if (screen === 'verify') {
     return (
-      <SafeAreaView style={[styles.darkBg, { justifyContent: 'center', alignItems: 'center' }]}>
+      <SafeAreaView style={[styles.darkBgWave, { justifyContent: 'center', alignItems: 'center' }]}>
         <ToastNotice />
         <View style={styles.authCardGlow}>
           <Text style={styles.authTitleCenter}>Подтвердите вашу почту</Text>
@@ -507,13 +517,13 @@ export default function App() {
             ))}
           </View>
 
-          <TouchableOpacity style={styles.mainCtaBtnGlow} onPress={handleVerifyOtp}>
-            <Text style={styles.mainCtaText}>Подтвердить</Text>
+          <TouchableOpacity style={styles.heroButtonGlow} onPress={handleVerifyOtp}>
+            <Text style={styles.heroButtonText}>Подтвердить</Text>
           </TouchableOpacity>
 
           <TouchableOpacity style={{ marginTop: 16, alignItems: 'center' }} onPress={handleStartAuth}>
-            <Text style={{ color: '#a1a1aa', fontSize: 12 }}>
-              Не получили код? <Text style={{ color: '#3b82f6' }}>[Отправить повторно]</Text>
+            <Text style={{ color: '#9ca3af', fontSize: 12 }}>
+              Не получили код? <Text style={{ color: '#38bdf8' }}>[Отправить повторно]</Text>
             </Text>
           </TouchableOpacity>
         </View>
@@ -525,14 +535,14 @@ export default function App() {
   const isUserVipOrAdmin = currentUser?.role === 'admin' || currentUser?.role === 'vip';
 
   return (
-    <SafeAreaView style={styles.darkBg}>
+    <SafeAreaView style={styles.darkBgWave}>
       <ToastNotice />
       <View style={styles.chatHeader}>
         <View style={styles.logoRow}>
           <View style={styles.boltIcon}><Text style={styles.boltText}>⚡</Text></View>
           <View>
             <Text style={{ color: '#10b981', fontWeight: 'bold', fontSize: 16 }}>MadAI</Text>
-            <Text style={{ color: '#71717a', fontSize: 10 }}>{currentUser?.email}</Text>
+            <Text style={{ color: '#6b7280', fontSize: 10 }}>{currentUser?.email}</Text>
           </View>
         </View>
 
@@ -553,7 +563,7 @@ export default function App() {
       </View>
 
       <View style={styles.modelBar}>
-        <Text style={{ color: '#71717a', fontSize: 11, marginRight: 8 }}>Модель:</Text>
+        <Text style={{ color: '#6b7280', fontSize: 11, marginRight: 8 }}>Модель:</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
           {FREE_MODELS.map(m => (
             <TouchableOpacity
@@ -561,7 +571,7 @@ export default function App() {
               style={[styles.modelChip, selectedModel === m.id && styles.modelChipActive]}
               onPress={() => setSelectedModel(m.id)}
             >
-              <Text style={{ color: selectedModel === m.id ? '#10b981' : '#a1a1aa', fontSize: 11, fontWeight: 'bold' }}>{m.name}</Text>
+              <Text style={{ color: selectedModel === m.id ? '#10b981' : '#9ca3af', fontSize: 11, fontWeight: 'bold' }}>{m.name}</Text>
             </TouchableOpacity>
           ))}
 
@@ -577,7 +587,7 @@ export default function App() {
                 setSelectedModel(m.id);
               }}
             >
-              <Text style={{ color: selectedModel === m.id ? '#10b981' : '#3b82f6', fontSize: 11, fontWeight: 'bold' }}>
+              <Text style={{ color: selectedModel === m.id ? '#10b981' : '#38bdf8', fontSize: 11, fontWeight: 'bold' }}>
                 {m.name} {!isUserVipOrAdmin && '🔒 (VIP)'}
               </Text>
             </TouchableOpacity>
@@ -599,14 +609,14 @@ export default function App() {
       <View style={styles.bottomBarCenter}>
         <View style={styles.inputInnerRow}>
           <TouchableOpacity style={styles.smallBtn} onPress={() => setMessages([])}>
-            <Text style={{ color: '#a1a1aa', fontSize: 11 }}>Очистить</Text>
+            <Text style={{ color: '#9ca3af', fontSize: 11 }}>Очистить</Text>
           </TouchableOpacity>
           <TextInput
             style={styles.chatInput}
             value={input}
             onChangeText={setInput}
             placeholder="Спроси о чём угодно..."
-            placeholderTextColor="#52525b"
+            placeholderTextColor="#4b5563"
           />
           <TouchableOpacity style={styles.sendBtn} onPress={handleSend} disabled={loading}>
             <Text style={{ color: '#fff', fontWeight: 'bold' }}>{loading ? "..." : "➤"}</Text>
@@ -614,7 +624,6 @@ export default function App() {
         </View>
       </View>
 
-      {/* АДМИНКА */}
       <Modal visible={adminModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
@@ -624,12 +633,12 @@ export default function App() {
                 <View key={u.id} style={styles.userRow}>
                   <View style={{ flex: 1 }}>
                     <Text style={{ color: '#fff', fontSize: 13, fontWeight: 'bold' }}>{u.name || 'User'}</Text>
-                    <Text style={{ color: '#71717a', fontSize: 11 }}>{u.email} | IP: {u.ip || '127.0.0.1'}</Text>
+                    <Text style={{ color: '#6b7280', fontSize: 11 }}>{u.email} | IP: {u.ip || '127.0.0.1'}</Text>
                   </View>
                   <TouchableOpacity 
                     style={[
                       styles.roleBadge, 
-                      u.role === 'admin' ? { backgroundColor: '#ef4444' } : u.role === 'vip' ? { backgroundColor: '#3b82f6' } : { backgroundColor: '#27272a' }
+                      u.role === 'admin' ? { backgroundColor: '#ef4444' } : u.role === 'vip' ? { backgroundColor: '#38bdf8' } : { backgroundColor: '#1f2937' }
                     ]}
                     onPress={() => toggleUserRole(u.id)}
                   >
@@ -645,7 +654,6 @@ export default function App() {
         </View>
       </Modal>
 
-      {/* Модалка бага */}
       <Modal visible={bugModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
@@ -656,7 +664,7 @@ export default function App() {
               value={bugText}
               onChangeText={setBugText}
               placeholder="Напишите тут..."
-              placeholderTextColor="#52525b"
+              placeholderTextColor="#4b5563"
             />
             <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 12 }}>
               <TouchableOpacity style={styles.smallBtn} onPress={() => setBugModal(false)}><Text style={{ color: '#fff' }}>Отмена</Text></TouchableOpacity>
@@ -670,83 +678,107 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  darkBg: { flex: 1, backgroundColor: '#030305' },
+  // Абстрактный волнистый фон с глубоким сине-изумрудным градиентом
+  darkBgWave: { 
+    flex: 1, 
+    backgroundColor: '#04080c', 
+    backgroundImage: 'radial-gradient(circle at 50% 30%, #0d1e28 0%, #030609 70%), url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'800\' viewBox=\'0 0 800 800\'%3E%3Cpath fill=\'none\' stroke=\'%230e2f38\' stroke-width=\'1\' opacity=\'0.25\' d=\'M0,100 Q400,300 800,100 T800,500 Q400,700 0,500 Z M0,200 Q400,400 800,200 T800,600 Q400,800 0,600 Z\'/%3E%3C/svg%3E")', 
+    backgroundSize: 'cover, cover'
+  },
+
   landingContentCenter: { padding: 16, alignItems: 'center', justifyContent: 'center', minHeight: '85%', paddingBottom: 80 },
   
-  topNavCenter: { width: '100%', maxWidth: 1000, alignSelf: 'center', flexDirection: 'row', justifyContent: 'flex-start', padding: 16, zIndex: 999 },
-  topNavAbsoluteCenter: { position: 'absolute', top: 16, left: 0, right: 0, width: '100%', maxWidth: 1000, alignSelf: 'center', flexDirection: 'row', justifyContent: 'flex-start', paddingHorizontal: 16, zIndex: 999 },
+  topNavCenter: { width: '100%', maxWidth: 1100, alignSelf: 'center', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, zIndex: 999 },
+  topNavAbsoluteCenter: { position: 'absolute', top: 16, left: 0, right: 0, width: '100%', maxWidth: 1100, alignSelf: 'center', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, zIndex: 999 },
 
-  langDropBtn: { backgroundColor: '#0d0d12', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: '#1f2937' },
-  langMenu: { position: 'absolute', top: 42, left: 0, backgroundColor: '#0d0d12', borderRadius: 8, borderWidth: 1, borderColor: '#1f2937', width: 140, padding: 4, elevation: 10, zIndex: 9999 },
+  statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  greenDotGlow: { width: 9, height: 9, borderRadius: 5, backgroundColor: '#10b981', boxShadow: '0 0 10px #10b981' },
+
+  langDropBtn: { backgroundColor: 'rgba(15, 23, 42, 0.6)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#1e293b' },
+  langMenu: { position: 'absolute', top: 42, left: 0, backgroundColor: '#090d12', borderRadius: 8, borderWidth: 1, borderColor: '#1e293b', width: 140, padding: 4, elevation: 10, zIndex: 9999 },
   langMenuItem: { padding: 8, borderRadius: 6 },
 
-  heroSection: { alignItems: 'center', marginVertical: 30, maxWidth: 650, width: '100%' },
-  heroHeader: { color: '#ffffff', fontSize: 64, fontWeight: '900', textAlign: 'center', letterSpacing: 2 },
-  heroSub: { color: '#9ca3af', fontSize: 16, textAlign: 'center', marginVertical: 20, lineHeight: 24 },
+  heroSection: { alignItems: 'center', marginVertical: 35, maxWidth: 700, width: '100%' },
+  heroHeader: { color: '#ffffff', fontSize: 72, fontWeight: '900', textAlign: 'center', letterSpacing: 2 },
+  heroSub: { color: '#9ca3af', fontSize: 16, textAlign: 'center', marginVertical: 22, lineHeight: 26, maxWidth: 620 },
   
-  mainCtaBtnGlow: { backgroundColor: '#05050a', paddingHorizontal: 28, paddingVertical: 14, borderRadius: 10, borderWidth: 1, borderColor: '#10b981', width: '100%', alignItems: 'center', shadowColor: '#10b981', shadowRadius: 15, shadowOpacity: 0.4 },
-  mainCtaText: { color: '#ffffff', fontWeight: 'bold', fontSize: 15 },
+  heroButtonGlow: { 
+    backgroundColor: '#071217', 
+    paddingHorizontal: 36, 
+    paddingVertical: 12, 
+    borderRadius: 8, 
+    borderWidth: 1, 
+    borderColor: '#22d3ee', 
+    boxShadow: '0 0 18px rgba(34, 211, 238, 0.35)', 
+    alignItems: 'center' 
+  },
+  heroButtonText: { color: '#ffffff', fontWeight: 'bold', fontSize: 15 },
 
-  sectionTitle: { color: '#ffffff', fontSize: 16, fontWeight: 'bold', letterSpacing: 2, marginTop: 40, marginBottom: 20, textAlign: 'center' },
-  gridCardsCenter: { flexDirection: 'row', gap: 16, flexWrap: 'wrap', justifyContent: 'center', maxWidth: 1000, width: '100%' },
-  featureCardGlow: { backgroundColor: '#08080d', padding: 24, borderRadius: 12, borderWidth: 1, borderColor: '#1f2937', width: 280, shadowColor: '#10b981', shadowRadius: 10, shadowOpacity: 0.1 },
-  cardIcon: { fontSize: 24, marginBottom: 12 },
-  cardTitle: { color: '#ffffff', fontWeight: 'bold', fontSize: 13, letterSpacing: 1, marginBottom: 8 },
-  cardDesc: { color: '#71717a', fontSize: 12, lineHeight: 18 },
+  sectionTitle: { color: '#ffffff', fontSize: 16, fontWeight: 'bold', letterSpacing: 2, marginTop: 40, marginBottom: 24, textAlign: 'center' },
+  gridCardsCenter: { flexDirection: 'row', gap: 20, flexWrap: 'wrap', justifyContent: 'center', maxWidth: 1100, width: '100%' },
+  
+  featureCardWave: { 
+    backgroundColor: 'rgba(8, 15, 22, 0.75)', 
+    padding: 24, 
+    borderRadius: 12, 
+    borderWidth: 1, 
+    borderColor: 'rgba(255, 255, 255, 0.08)', 
+    width: 320,
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)'
+  },
+  cardIcon: { fontSize: 24, marginBottom: 14 },
+  cardTitle: { color: '#ffffff', fontWeight: 'bold', fontSize: 13, letterSpacing: 1, marginBottom: 10 },
+  cardDesc: { color: '#9ca3af', fontSize: 12, lineHeight: 20 },
 
-  footerBarCenter: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-between', padding: 16, backgroundColor: '#030305', borderTopWidth: 1, borderColor: '#111827', width: '100%', maxWidth: 1000, alignSelf: 'center' },
-  footerBarAbsoluteCenter: { position: 'absolute', bottom: 16, left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-between', width: '100%', maxWidth: 1000, alignSelf: 'center', paddingHorizontal: 16 },
-  footerText: { color: '#4b5563', fontSize: 11 },
-  footerLink: { color: '#4b5563', fontSize: 11 },
+  footerBarCenter: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-between', padding: 18, borderTopWidth: 1, borderColor: 'rgba(255, 255, 255, 0.05)', width: '100%', maxWidth: 1100, alignSelf: 'center' },
+  footerBarAbsoluteCenter: { position: 'absolute', bottom: 16, left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-between', width: '100%', maxWidth: 1100, alignSelf: 'center', paddingHorizontal: 16 },
+  footerText: { color: '#6b7280', fontSize: 11 },
+  footerLink: { color: '#6b7280', fontSize: 11 },
 
-  // Toast
-  toastContainer: { position: 'absolute', bottom: 60, alignSelf: 'center', backgroundColor: '#10b981', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20, zIndex: 99999, shadowColor: '#000', shadowRadius: 10, shadowOpacity: 0.5 },
+  toastContainer: { position: 'absolute', bottom: 60, alignSelf: 'center', backgroundColor: '#10b981', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20, zIndex: 99999, boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)' },
   toastText: { color: '#000', fontWeight: 'bold', fontSize: 13 },
 
-  // Auth
-  authCardGlow: { backgroundColor: '#08080d', padding: 28, borderRadius: 16, borderWidth: 1, borderColor: '#1f2937', width: '90%', maxWidth: 420, shadowColor: '#3b82f6', shadowRadius: 20, shadowOpacity: 0.15 },
+  authCardGlow: { backgroundColor: 'rgba(8, 15, 22, 0.9)', padding: 30, borderRadius: 16, borderWidth: 1, borderColor: '#1e293b', width: '90%', maxWidth: 420, boxShadow: '0 0 30px rgba(0,0,0,0.6)' },
   authTitle: { color: '#ffffff', fontSize: 26, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
   authTitleCenter: { color: '#ffffff', fontSize: 22, fontWeight: 'bold', textAlign: 'center', marginBottom: 8 },
-  otpSubText: { color: '#71717a', fontSize: 13, textAlign: 'center', marginBottom: 20, lineHeight: 18 },
+  otpSubText: { color: '#9ca3af', fontSize: 13, textAlign: 'center', marginBottom: 20, lineHeight: 18 },
 
   inputWrapper: { marginBottom: 14 },
-  inputLabel: { color: '#a1a1aa', fontSize: 12, marginBottom: 6 },
-  inputField: { backgroundColor: '#030305', color: '#fff', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#1f2937', fontSize: 13 },
-  strengthBarBg: { height: 3, backgroundColor: '#18181b', borderRadius: 2, marginTop: 6, overflow: 'hidden' },
+  inputLabel: { color: '#9ca3af', fontSize: 12, marginBottom: 6 },
+  inputField: { backgroundColor: '#04080c', color: '#fff', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#1e293b', fontSize: 13 },
+  strengthBarBg: { height: 3, backgroundColor: '#111827', borderRadius: 2, marginTop: 6, overflow: 'hidden' },
   strengthBarFill: { height: '100%', borderRadius: 2 },
 
   checkboxRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
-  checkbox: { width: 16, height: 16, borderRadius: 4, borderWidth: 1, borderColor: '#3b82f6' },
-  checkboxActive: { backgroundColor: '#3b82f6' },
+  checkbox: { width: 16, height: 16, borderRadius: 4, borderWidth: 1, borderColor: '#38bdf8' },
+  checkboxActive: { backgroundColor: '#38bdf8' },
 
-  // OTP
   otpContainer: { flexDirection: 'row', justifyContent: 'space-between', gap: 8, marginVertical: 20 },
-  otpBoxGlow: { width: 44, height: 50, backgroundColor: '#030305', borderRadius: 8, borderWidth: 1, borderColor: '#10b981', color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
+  otpBoxGlow: { width: 44, height: 50, backgroundColor: '#04080c', borderRadius: 8, borderWidth: 1, borderColor: '#10b981', color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
 
-  // Chat
-  chatHeader: { padding: 12, borderBottomWidth: 1, borderColor: '#111827', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1000, alignSelf: 'center', width: '100%' },
+  chatHeader: { padding: 14, borderBottomWidth: 1, borderColor: 'rgba(255,255,255,0.06)', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1100, alignSelf: 'center', width: '100%' },
   logoRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   boltIcon: { width: 32, height: 32, borderRadius: 8, backgroundColor: '#10b981', justifyContent: 'center', alignItems: 'center' },
   boltText: { color: '#09090b', fontWeight: 'bold', fontSize: 16 },
   adminBadgeBtn: { backgroundColor: '#ef4444', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6 },
-  smallBtn: { backgroundColor: '#111827', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: '#1f2937' },
+  smallBtn: { backgroundColor: 'rgba(255,255,255,0.05)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
 
-  modelBar: { flexDirection: 'row', alignItems: 'center', padding: 8, paddingHorizontal: 12, backgroundColor: '#08080d', borderBottomWidth: 1, borderColor: '#111827', maxWidth: 1000, alignSelf: 'center', width: '100%' },
-  modelChip: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, backgroundColor: '#111827', borderWidth: 1, borderColor: '#1f2937' },
-  modelChipActive: { borderColor: '#10b981', backgroundColor: '#064e3b' },
+  modelBar: { flexDirection: 'row', alignItems: 'center', padding: 8, paddingHorizontal: 12, backgroundColor: 'rgba(8, 15, 22, 0.6)', borderBottomWidth: 1, borderColor: 'rgba(255,255,255,0.06)', maxWidth: 1100, alignSelf: 'center', width: '100%' },
+  modelChip: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
+  modelChipActive: { borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.2)' },
 
   msgBox: { padding: 12, marginVertical: 4, borderRadius: 10, maxWidth: '82%' },
   userBox: { backgroundColor: '#059669', alignSelf: 'flex-end' },
-  aiBox: { backgroundColor: '#08080d', alignSelf: 'flex-start', borderWidth: 1, borderColor: '#1f2937' },
+  aiBox: { backgroundColor: 'rgba(8, 15, 22, 0.8)', alignSelf: 'flex-start', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
 
-  bottomBarCenter: { borderTopWidth: 1, borderColor: '#111827', padding: 12, width: '100%', maxWidth: 1000, alignSelf: 'center' },
+  bottomBarCenter: { borderTopWidth: 1, borderColor: 'rgba(255,255,255,0.06)', padding: 12, width: '100%', maxWidth: 1100, alignSelf: 'center' },
   inputInnerRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
-  chatInput: { flex: 1, backgroundColor: '#08080d', color: '#fff', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#1f2937', fontSize: 13 },
+  chatInput: { flex: 1, backgroundColor: 'rgba(8, 15, 22, 0.8)', color: '#fff', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', fontSize: 13 },
   sendBtn: { backgroundColor: '#10b981', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8 },
 
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', padding: 20 },
-  modalCard: { backgroundColor: '#08080d', padding: 18, borderRadius: 12, borderWidth: 1, borderColor: '#1f2937', maxWidth: 500, alignSelf: 'center', width: '100%' },
-  modalArea: { backgroundColor: '#030305', color: '#fff', padding: 10, borderRadius: 8, height: 90, textAlignVertical: 'top', borderWidth: 1, borderColor: '#1f2937' },
-  userRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderColor: '#1f2937' },
+  modalCard: { backgroundColor: '#090d12', padding: 18, borderRadius: 12, borderWidth: 1, borderColor: '#1e293b', maxWidth: 500, alignSelf: 'center', width: '100%' },
+  modalArea: { backgroundColor: '#04080c', color: '#fff', padding: 10, borderRadius: 8, height: 90, textAlignVertical: 'top', borderWidth: 1, borderColor: '#1e293b' },
+  userRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderColor: '#1e293b' },
   roleBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }
 });
