@@ -62,6 +62,33 @@ export default function App() {
 
   const otpInputs = useRef([]);
 
+  // Авто-внедрение фонового волнистого стиля в браузер
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      let styleTag = document.getElementById('madai-wave-theme');
+      if (!styleTag) {
+        styleTag = document.createElement('style');
+        styleTag.id = 'madai-wave-theme';
+        document.head.appendChild(styleTag);
+      }
+      styleTag.innerHTML = `
+        html, body, #root {
+          background-color: #03060a !important;
+          margin: 0;
+          padding: 0;
+        }
+        body {
+          background-image: 
+            radial-gradient(circle at 50% 25%, rgba(14, 45, 55, 0.45) 0%, rgba(3, 6, 10, 0.98) 75%),
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='1200' viewBox='0 0 1200 1200'%3E%3Cpath fill='none' stroke='%2310b981' stroke-width='0.5' opacity='0.2' d='M0,200 C300,100 600,350 1200,150 M0,450 C400,200 800,600 1200,400 M0,750 C500,550 900,850 1200,700' /%3E%3Cpath fill='none' stroke='%2338bdf8' stroke-width='0.4' opacity='0.15' d='M0,300 C400,500 800,150 1200,350' /%3E%3Ccircle cx='250' cy='220' r='1.5' fill='%2310b981' opacity='0.4'/%3E%3Ccircle cx='850' cy='380' r='2' fill='%2310b981' opacity='0.3'/%3E%3Ccircle cx='600' cy='720' r='1.5' fill='%2338bdf8' opacity='0.35'/%3E%3C/svg%3E") !important;
+          background-repeat: no-repeat, repeat !important;
+          background-position: center top, center center !important;
+          background-size: cover, 1000px 1000px !important;
+        }
+      `;
+    }
+  }, []);
+
   const showToast = (msg) => {
     setToastMessage(msg);
     setToastVisible(true);
@@ -74,11 +101,11 @@ export default function App() {
       .then(data => setUserIp(data.ip || '127.0.0.1'))
       .catch(() => setUserIp('127.0.0.1'));
 
-    const savedUsers = localStorage.getItem('madai_users_db_v5');
+    const savedUsers = localStorage.getItem('madai_users_db_v7');
     let db = savedUsers ? JSON.parse(savedUsers) : [];
     setUsersList(db);
 
-    const savedSession = localStorage.getItem('madai_current_session_v5');
+    const savedSession = localStorage.getItem('madai_current_session_v7');
     if (savedSession) {
       const parsed = JSON.parse(savedSession);
       setCurrentUser(parsed);
@@ -88,7 +115,7 @@ export default function App() {
 
   const saveUsersDb = (newDb) => {
     setUsersList(newDb);
-    localStorage.setItem('madai_users_db_v5', JSON.stringify(newDb));
+    localStorage.setItem('madai_users_db_v7', JSON.stringify(newDb));
   };
 
   const getPasswordStrength = () => {
@@ -117,18 +144,16 @@ export default function App() {
           html: `
             <div style="background-color: #060b0e; color: #ffffff; padding: 30px; font-family: sans-serif; border-radius: 12px; border: 1px solid #10b981;">
               <h2 style="color: #10b981; margin-bottom: 10px;">MadAI Verification</h2>
-              <p style="font-size: 14px; color: #a1a1aa;">Ваш 6-значный код для подтверждения почты:</p>
+              <p style="font-size: 14px; color: #a1a1aa;">Ваш 6-значный код подтверждения:</p>
               <div style="background: #0c1419; padding: 18px; border-radius: 8px; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #10b981; text-align: center; margin: 20px 0; border: 1px solid #1f2937;">
                 ${code}
               </div>
-              <p style="font-size: 12px; color: #6b7280;">Если вы не регистрировались в MadAI, просто проигнорируйте это письмо.</p>
             </div>
           `
         })
       });
       return true;
     } catch (e) {
-      console.error("Resend error:", e);
       return false;
     }
   };
@@ -193,7 +218,7 @@ export default function App() {
 
       saveUsersDb(usersList);
       setCurrentUser(user);
-      localStorage.setItem('madai_current_session_v5', JSON.stringify(user));
+      localStorage.setItem('madai_current_session_v7', JSON.stringify(user));
       setScreen('chat');
     }
   };
@@ -204,7 +229,7 @@ export default function App() {
       const updatedDb = [...usersList, pendingUser];
       saveUsersDb(updatedDb);
       setCurrentUser(pendingUser);
-      localStorage.setItem('madai_current_session_v5', JSON.stringify(pendingUser));
+      localStorage.setItem('madai_current_session_v7', JSON.stringify(pendingUser));
       setPendingUser(null);
       setScreen('chat');
       showToast("Почта подтверждена! Добро пожаловать.");
@@ -224,7 +249,7 @@ export default function App() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('madai_current_session_v5');
+    localStorage.removeItem('madai_current_session_v7');
     setCurrentUser(null);
     setScreen('landing');
   };
@@ -236,7 +261,7 @@ export default function App() {
         const newObj = { ...u, role: nextRole };
         if (currentUser && currentUser.id === targetId) {
           setCurrentUser(newObj);
-          localStorage.setItem('madai_current_session_v5', JSON.stringify(newObj));
+          localStorage.setItem('madai_current_session_v7', JSON.stringify(newObj));
         }
         return newObj;
       }
@@ -301,27 +326,33 @@ export default function App() {
     }
   };
 
+  // Компонент переключения языков
   const LanguageSelector = () => {
     const currentLangObj = LANGUAGES.find(l => l.code === langCode) || LANGUAGES[0];
     return (
-      <View style={{ zIndex: 9999 }}>
-        <TouchableOpacity style={styles.langDropBtn} onPress={() => setLangDropdown(!langDropdown)}>
+      <View style={{ zIndex: 99999 }}>
+        <TouchableOpacity 
+          style={styles.langDropBtn} 
+          activeOpacity={0.7} 
+          onPress={() => setLangDropdown(!langDropdown)}
+        >
           <Text style={{ color: '#fff', fontSize: 13 }}>🌐 Язык: {currentLangObj.code}</Text>
         </TouchableOpacity>
 
         {langDropdown && (
           <View style={styles.langMenu}>
-            <ScrollView style={{ maxHeight: 180 }}>
+            <ScrollView style={{ maxHeight: 200 }} nestedScrollEnabled>
               {LANGUAGES.map((item) => (
                 <TouchableOpacity
                   key={item.code}
                   style={styles.langMenuItem}
+                  activeOpacity={0.6}
                   onPress={() => {
                     setLangCode(item.code);
                     setLangDropdown(false);
                   }}
                 >
-                  <Text style={{ color: item.code === langCode ? '#10b981' : '#a1a1aa', fontSize: 13 }}>
+                  <Text style={{ color: item.code === langCode ? '#10b981' : '#9ca3af', fontSize: 13, fontWeight: item.code === langCode ? 'bold' : 'normal' }}>
                     {item.name}
                   </Text>
                 </TouchableOpacity>
@@ -342,19 +373,14 @@ export default function App() {
     );
   };
 
-  // 1. ЛЕНДИНГ С ЭСТЕТИКОЙ ВВОДНОГО СКРИНА
+  // 1. ЛЕНДИНГ
   if (screen === 'landing') {
     return (
-      <SafeAreaView style={styles.darkBgWave}>
+      <SafeAreaView style={styles.transparentBg}>
         <ToastNotice />
         
-        {/* Шапка с языком и онлайн-статусом */}
         <View style={styles.topNavCenter}>
           <LanguageSelector />
-          <View style={styles.statusBadge}>
-            <Text style={{ color: '#9ca3af', fontSize: 13 }}>Статус: Онлайн</Text>
-            <View style={styles.greenDotGlow} />
-          </View>
         </View>
 
         <ScrollView contentContainerStyle={styles.landingContentCenter}>
@@ -400,27 +426,23 @@ export default function App() {
 
         <View style={styles.footerBarCenter}>
           <Text style={styles.footerText}>© 2026 MadAI. All rights reserved.</Text>
-          <View style={{ flexDirection: 'row', gap: 16 }}>
-            <Text style={styles.footerLink}>Политика приватности</Text>
-            <Text style={styles.footerLink}>Условия использования</Text>
+          <View style={{ flexDirection: 'row', gap: 20 }}>
+            <TouchableOpacity><Text style={styles.footerLink}>Политика приватности</Text></TouchableOpacity>
+            <TouchableOpacity><Text style={styles.footerLink}>Условия использования</Text></TouchableOpacity>
           </View>
         </View>
       </SafeAreaView>
     );
   }
 
-  // 2. ФОРМА АВТОРИЗАЦИИ / РЕГИСТРАЦИИ
+  // 2. ФОРМА АВТОРИЗАЦИИ
   if (screen === 'auth') {
     const strength = getPasswordStrength();
     return (
-      <SafeAreaView style={[styles.darkBgWave, { justifyContent: 'center', alignItems: 'center' }]}>
+      <SafeAreaView style={[styles.transparentBg, { justifyContent: 'center', alignItems: 'center' }]}>
         <ToastNotice />
         <View style={styles.topNavAbsoluteCenter}>
           <LanguageSelector />
-          <View style={styles.statusBadge}>
-            <Text style={{ color: '#9ca3af', fontSize: 13 }}>Статус: Онлайн</Text>
-            <View style={styles.greenDotGlow} />
-          </View>
         </View>
 
         <View style={styles.authCardGlow}>
@@ -483,9 +505,9 @@ export default function App() {
 
         <View style={styles.footerBarAbsoluteCenter}>
           <Text style={styles.footerText}>© 2026 MadAI. All rights reserved.</Text>
-          <View style={{ flexDirection: 'row', gap: 16 }}>
-            <Text style={styles.footerLink}>Политика приватности</Text>
-            <Text style={styles.footerLink}>Условия использования</Text>
+          <View style={{ flexDirection: 'row', gap: 20 }}>
+            <TouchableOpacity><Text style={styles.footerLink}>Политика приватности</Text></TouchableOpacity>
+            <TouchableOpacity><Text style={styles.footerLink}>Условия использования</Text></TouchableOpacity>
           </View>
         </View>
       </SafeAreaView>
@@ -495,7 +517,7 @@ export default function App() {
   // 3. OTP
   if (screen === 'verify') {
     return (
-      <SafeAreaView style={[styles.darkBgWave, { justifyContent: 'center', alignItems: 'center' }]}>
+      <SafeAreaView style={[styles.transparentBg, { justifyContent: 'center', alignItems: 'center' }]}>
         <ToastNotice />
         <View style={styles.authCardGlow}>
           <Text style={styles.authTitleCenter}>Подтвердите вашу почту</Text>
@@ -535,7 +557,7 @@ export default function App() {
   const isUserVipOrAdmin = currentUser?.role === 'admin' || currentUser?.role === 'vip';
 
   return (
-    <SafeAreaView style={styles.darkBgWave}>
+    <SafeAreaView style={styles.transparentBg}>
       <ToastNotice />
       <View style={styles.chatHeader}>
         <View style={styles.logoRow}>
@@ -678,25 +700,16 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  // Абстрактный волнистый фон с глубоким сине-изумрудным градиентом
-  darkBgWave: { 
-    flex: 1, 
-    backgroundColor: '#04080c', 
-    backgroundImage: 'radial-gradient(circle at 50% 30%, #0d1e28 0%, #030609 70%), url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'800\' height=\'800\' viewBox=\'0 0 800 800\'%3E%3Cpath fill=\'none\' stroke=\'%230e2f38\' stroke-width=\'1\' opacity=\'0.25\' d=\'M0,100 Q400,300 800,100 T800,500 Q400,700 0,500 Z M0,200 Q400,400 800,200 T800,600 Q400,800 0,600 Z\'/%3E%3C/svg%3E")', 
-    backgroundSize: 'cover, cover'
-  },
+  transparentBg: { flex: 1, backgroundColor: 'transparent' },
 
-  landingContentCenter: { padding: 16, alignItems: 'center', justifyContent: 'center', minHeight: '85%', paddingBottom: 80 },
+  landingContentCenter: { padding: 16, alignItems: 'center', justifyContent: 'center', minHeight: '82%', paddingBottom: 90 },
   
-  topNavCenter: { width: '100%', maxWidth: 1100, alignSelf: 'center', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16, zIndex: 999 },
-  topNavAbsoluteCenter: { position: 'absolute', top: 16, left: 0, right: 0, width: '100%', maxWidth: 1100, alignSelf: 'center', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, zIndex: 999 },
+  topNavCenter: { width: '100%', maxWidth: 1100, alignSelf: 'center', flexDirection: 'row', justifyContent: 'flex-start', padding: 20, zIndex: 99999 },
+  topNavAbsoluteCenter: { position: 'absolute', top: 20, left: 0, right: 0, width: '100%', maxWidth: 1100, alignSelf: 'center', flexDirection: 'row', justifyContent: 'flex-start', paddingHorizontal: 20, zIndex: 99999 },
 
-  statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  greenDotGlow: { width: 9, height: 9, borderRadius: 5, backgroundColor: '#10b981', boxShadow: '0 0 10px #10b981' },
-
-  langDropBtn: { backgroundColor: 'rgba(15, 23, 42, 0.6)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#1e293b' },
-  langMenu: { position: 'absolute', top: 42, left: 0, backgroundColor: '#090d12', borderRadius: 8, borderWidth: 1, borderColor: '#1e293b', width: 140, padding: 4, elevation: 10, zIndex: 9999 },
-  langMenuItem: { padding: 8, borderRadius: 6 },
+  langDropBtn: { backgroundColor: 'rgba(15, 23, 42, 0.75)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#1e293b' },
+  langMenu: { position: 'absolute', top: 45, left: 0, backgroundColor: '#090d12', borderRadius: 8, borderWidth: 1, borderColor: '#1e293b', width: 150, padding: 4, elevation: 20, zIndex: 99999 },
+  langMenuItem: { padding: 10, borderRadius: 6 },
 
   heroSection: { alignItems: 'center', marginVertical: 35, maxWidth: 700, width: '100%' },
   heroHeader: { color: '#ffffff', fontSize: 72, fontWeight: '900', textAlign: 'center', letterSpacing: 2 },
@@ -730,15 +743,45 @@ const styles = StyleSheet.create({
   cardTitle: { color: '#ffffff', fontWeight: 'bold', fontSize: 13, letterSpacing: 1, marginBottom: 10 },
   cardDesc: { color: '#9ca3af', fontSize: 12, lineHeight: 20 },
 
-  footerBarCenter: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-between', padding: 18, borderTopWidth: 1, borderColor: 'rgba(255, 255, 255, 0.05)', width: '100%', maxWidth: 1100, alignSelf: 'center' },
-  footerBarAbsoluteCenter: { position: 'absolute', bottom: 16, left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-between', width: '100%', maxWidth: 1100, alignSelf: 'center', paddingHorizontal: 16 },
-  footerText: { color: '#6b7280', fontSize: 11 },
-  footerLink: { color: '#6b7280', fontSize: 11 },
+  footerBarCenter: { 
+    position: 'absolute', 
+    bottom: 0, 
+    left: 0, 
+    right: 0, 
+    flexDirection: 'row', 
+    justify: 'space-between', 
+    paddingVertical: 18, 
+    paddingHorizontal: 24,
+    borderTopWidth: 1, 
+    borderTopColor: 'rgba(255, 255, 255, 0.15)', 
+    width: '100%', 
+    maxWidth: 1100, 
+    alignSelf: 'center',
+    backgroundColor: 'rgba(3, 6, 10, 0.9)'
+  },
+  footerBarAbsoluteCenter: { 
+    position: 'absolute', 
+    bottom: 0, 
+    left: 0, 
+    right: 0, 
+    flexDirection: 'row', 
+    justify: 'space-between', 
+    width: '100%', 
+    maxWidth: 1100, 
+    alignSelf: 'center', 
+    paddingVertical: 18, 
+    paddingHorizontal: 24,
+    borderTopWidth: 1, 
+    borderTopColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: 'rgba(3, 6, 10, 0.9)'
+  },
+  footerText: { color: '#9ca3af', fontSize: 12 },
+  footerLink: { color: '#ffffff', fontSize: 12, textDecorationLine: 'underline' },
 
-  toastContainer: { position: 'absolute', bottom: 60, alignSelf: 'center', backgroundColor: '#10b981', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20, zIndex: 99999, boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)' },
+  toastContainer: { position: 'absolute', bottom: 70, alignSelf: 'center', backgroundColor: '#10b981', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20, zIndex: 999999, boxShadow: '0 4px 15px rgba(16, 185, 129, 0.4)' },
   toastText: { color: '#000', fontWeight: 'bold', fontSize: 13 },
 
-  authCardGlow: { backgroundColor: 'rgba(8, 15, 22, 0.9)', padding: 30, borderRadius: 16, borderWidth: 1, borderColor: '#1e293b', width: '90%', maxWidth: 420, boxShadow: '0 0 30px rgba(0,0,0,0.6)' },
+  authCardGlow: { backgroundColor: 'rgba(8, 15, 22, 0.92)', padding: 30, borderRadius: 16, borderWidth: 1, borderColor: '#1e293b', width: '90%', maxWidth: 420, boxShadow: '0 0 30px rgba(0,0,0,0.6)' },
   authTitle: { color: '#ffffff', fontSize: 26, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
   authTitleCenter: { color: '#ffffff', fontSize: 22, fontWeight: 'bold', textAlign: 'center', marginBottom: 8 },
   otpSubText: { color: '#9ca3af', fontSize: 13, textAlign: 'center', marginBottom: 20, lineHeight: 18 },
@@ -756,14 +799,14 @@ const styles = StyleSheet.create({
   otpContainer: { flexDirection: 'row', justifyContent: 'space-between', gap: 8, marginVertical: 20 },
   otpBoxGlow: { width: 44, height: 50, backgroundColor: '#04080c', borderRadius: 8, borderWidth: 1, borderColor: '#10b981', color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
 
-  chatHeader: { padding: 14, borderBottomWidth: 1, borderColor: 'rgba(255,255,255,0.06)', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1100, alignSelf: 'center', width: '100%' },
+  chatHeader: { padding: 14, borderBottomWidth: 1, borderColor: 'rgba(255,255,255,0.08)', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1100, alignSelf: 'center', width: '100%' },
   logoRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   boltIcon: { width: 32, height: 32, borderRadius: 8, backgroundColor: '#10b981', justifyContent: 'center', alignItems: 'center' },
   boltText: { color: '#09090b', fontWeight: 'bold', fontSize: 16 },
   adminBadgeBtn: { backgroundColor: '#ef4444', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6 },
   smallBtn: { backgroundColor: 'rgba(255,255,255,0.05)', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
 
-  modelBar: { flexDirection: 'row', alignItems: 'center', padding: 8, paddingHorizontal: 12, backgroundColor: 'rgba(8, 15, 22, 0.6)', borderBottomWidth: 1, borderColor: 'rgba(255,255,255,0.06)', maxWidth: 1100, alignSelf: 'center', width: '100%' },
+  modelBar: { flexDirection: 'row', alignItems: 'center', padding: 8, paddingHorizontal: 12, backgroundColor: 'rgba(8, 15, 22, 0.6)', borderBottomWidth: 1, borderColor: 'rgba(255,255,255,0.08)', maxWidth: 1100, alignSelf: 'center', width: '100%' },
   modelChip: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
   modelChipActive: { borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.2)' },
 
@@ -771,7 +814,7 @@ const styles = StyleSheet.create({
   userBox: { backgroundColor: '#059669', alignSelf: 'flex-end' },
   aiBox: { backgroundColor: 'rgba(8, 15, 22, 0.8)', alignSelf: 'flex-start', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)' },
 
-  bottomBarCenter: { borderTopWidth: 1, borderColor: 'rgba(255,255,255,0.06)', padding: 12, width: '100%', maxWidth: 1100, alignSelf: 'center' },
+  bottomBarCenter: { borderTopWidth: 1, borderColor: 'rgba(255,255,255,0.08)', padding: 12, width: '100%', maxWidth: 1100, alignSelf: 'center' },
   inputInnerRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
   chatInput: { flex: 1, backgroundColor: 'rgba(8, 15, 22, 0.8)', color: '#fff', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', fontSize: 13 },
   sendBtn: { backgroundColor: '#10b981', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8 },
