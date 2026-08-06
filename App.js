@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, Modal, SafeAreaView, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, Modal, SafeAreaView, ScrollView, Animated } from 'react-native';
 
 const OPENROUTER_API_KEY = "sk-or-v1-cf090582aa70565603ee80882ad90c9b0c797c27de40cacc70"; 
 const TELEGRAM_BOT_TOKEN = "8989304260:AAFT1zUOYHybijCklZSrJOtazpylsNWnBXw"; 
 const TELEGRAM_CHAT_ID = "1328175221";
-const RESEND_API_KEY = "re_3TCweHAc_9gKmLBawU5P7n6aRqDtUuksc";
 
+// Берём ключ из переменной Vercel или используем новый резервный
+const RESEND_API_KEY = process.env.REACT_APP_RESEND_API_KEY || "re_TFRWMQXn_S6GTRUGUqitGtzART4ytYv7q";
 const ADMIN_EMAIL = "glinkevichtm@gmail.com";
 
 const LANGUAGES = [
@@ -31,8 +32,7 @@ export default function App() {
   const [langCode, setLangCode] = useState('RU');
   const [langDropdown, setLangDropdown] = useState(false);
 
-  // 'landing' | 'auth' | 'verify' | 'chat'
-  const [screen, setScreen] = useState('landing');
+  const [screen, setScreen] = useState('landing'); // 'landing' | 'auth' | 'verify' | 'chat'
   const [authMode, setAuthMode] = useState('register'); // 'register' | 'login'
   
   const [name, setName] = useState('');
@@ -42,27 +42,39 @@ export default function App() {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [userIp, setUserIp] = useState('127.0.0.1');
 
-  // OTP Код
+  // Кастомные всплывающие уведомления (Toast)
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastVisible, setToastVisible] = useState(false);
+
+  // OTP
   const [otpCode, setOtpCode] = useState(['', '', '', '', '', '']);
   const [sentCode, setSentCode] = useState('');
   const [pendingUser, setPendingUser] = useState(null);
 
-  // Пользователи и сессия
+  // DB & Session
   const [usersList, setUsersList] = useState([]);
   const [currentUser, setCurrentUser] = useState(null);
 
-  // Чат
+  // Chat
   const [selectedModel, setSelectedModel] = useState(FREE_MODELS[0].id);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Модалки
+  // Modals
   const [bugModal, setBugModal] = useState(false);
   const [bugText, setBugText] = useState('');
   const [adminModal, setAdminModal] = useState(false);
 
   const otpInputs = useRef([]);
+
+  const showToast = (msg) => {
+    setToastMessage(msg);
+    setToastVisible(true);
+    setTimeout(() => {
+      setToastVisible(false);
+    }, 3500);
+  };
 
   useEffect(() => {
     fetch('https://api.ipify.org?format=json')
@@ -70,12 +82,11 @@ export default function App() {
       .then(data => setUserIp(data.ip || '127.0.0.1'))
       .catch(() => setUserIp('127.0.0.1'));
 
-    // Сброс базы под версию v3
-    const savedUsers = localStorage.getItem('madai_users_db_v3');
+    const savedUsers = localStorage.getItem('madai_users_db_v4');
     let db = savedUsers ? JSON.parse(savedUsers) : [];
     setUsersList(db);
 
-    const savedSession = localStorage.getItem('madai_current_session_v3');
+    const savedSession = localStorage.getItem('madai_current_session_v4');
     if (savedSession) {
       const parsed = JSON.parse(savedSession);
       setCurrentUser(parsed);
@@ -85,10 +96,9 @@ export default function App() {
 
   const saveUsersDb = (newDb) => {
     setUsersList(newDb);
-    localStorage.setItem('madai_users_db_v3', JSON.stringify(newDb));
+    localStorage.setItem('madai_users_db_v4', JSON.stringify(newDb));
   };
 
-  // Оценка силы пароля
   const getPasswordStrength = () => {
     if (!password) return { label: 'Слабый', color: '#ef4444', score: 1 };
     if (password.length > 8 && /[A-Z]/.test(password) && /[0-9]/.test(password)) {
@@ -100,7 +110,6 @@ export default function App() {
     return { label: 'Слабый', color: '#ef4444', score: 1 };
   };
 
-  // Отправка письма с кодом подтверждения
   const sendEmailVerification = async (targetEmail, code) => {
     try {
       await fetch('https://api.resend.com/emails', {
@@ -110,24 +119,24 @@ export default function App() {
           'Authorization': `Bearer ${RESEND_API_KEY}`
         },
         body: JSON.stringify({
-          from: 'onboarding@resend.dev',
+          from: 'MadAI <no-reply@madlinov.xyz>',
           to: [targetEmail],
           subject: 'Код подтверждения регистрации MadAI',
           html: `
-            <div style="background-color: #09090b; color: #ffffff; padding: 30px; font-family: sans-serif; border-radius: 10px;">
+            <div style="background-color: #05050a; color: #ffffff; padding: 30px; font-family: sans-serif; border-radius: 12px; border: 1px solid #10b981;">
               <h2 style="color: #10b981; margin-bottom: 10px;">MadAI Verification</h2>
-              <p style="font-size: 15px; color: #a1a1aa;">Ваш код подтверждения для входа в систему:</p>
-              <div style="background: #121215; padding: 15px; border-radius: 8px; font-size: 28px; font-weight: bold; letter-spacing: 6px; color: #10b981; text-align: center; margin: 20px 0; border: 1px solid #1f1f23;">
+              <p style="font-size: 14px; color: #a1a1aa;">Ваш 6-значный код для подтверждения почты:</p>
+              <div style="background: #0d0e15; padding: 18px; border-radius: 8px; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #10b981; text-align: center; margin: 20px 0; border: 1px solid #1f2937;">
                 ${code}
               </div>
-              <p style="font-size: 12px; color: #71717a;">Если вы не запрашивали данный код, проигнорируйте это письмо.</p>
+              <p style="font-size: 12px; color: #6b7280;">Если вы не регистрировались в MadAI, просто проигнорируйте это письмо.</p>
             </div>
           `
         })
       });
       return true;
     } catch (e) {
-      console.error("Ошибка отправки почты:", e);
+      console.error("Resend error:", e);
       return false;
     }
   };
@@ -135,32 +144,31 @@ export default function App() {
   const handleStartAuth = async () => {
     const cleanEmail = email.trim().toLowerCase();
 
-    if (!cleanEmail.includes('@')) {
-      alert("Введите корректный E-mail!");
+    if (!cleanEmail.includes('@') || !cleanEmail.includes('.')) {
+      showToast("Введите корректный E-mail!");
       return;
     }
 
     if (authMode === 'register') {
       if (password.length < 4) {
-        alert("Пароль должен быть не менее 4 символов!");
+        showToast("Пароль должен быть от 4 символов!");
         return;
       }
       if (password !== confirmPassword) {
-        alert("Пароли не совпадают!");
+        showToast("Пароли не совпадают!");
         return;
       }
       if (!agreeTerms) {
-        alert("Необходимо принять Условия использования!");
+        showToast("Примите условия использования!");
         return;
       }
 
       const exists = usersList.find(u => u.email.toLowerCase() === cleanEmail);
       if (exists) {
-        alert("Пользователь с таким email уже зарегистрирован! Нажмите 'Войти'.");
+        showToast("Пользователь уже существует! Нажмите 'Войти'.");
         return;
       }
 
-      // Генерация 6-значного кода
       const generatedCode = Math.floor(100000 + Math.random() * 900000).toString();
       setSentCode(generatedCode);
 
@@ -174,21 +182,17 @@ export default function App() {
         ip: userIp
       });
 
-      const success = await sendEmailVerification(cleanEmail, generatedCode);
-      if (success) {
-        setScreen('verify');
-      } else {
-        alert("Ошибка при отправке письма. Проверьте адрес почты.");
-      }
+      sendEmailVerification(cleanEmail, generatedCode);
+      setScreen('verify');
+      showToast("Код отправлен на вашу почту!");
     } else {
-      // Вход без OTP
       const user = usersList.find(u => u.email.toLowerCase() === cleanEmail);
       if (!user) {
-        alert("Пользователь с таким email не найден! Зарегистрируйтесь.");
+        showToast("Пользователь не найден! Зарегистрируйтесь.");
         return;
       }
       if (user.password !== password) {
-        alert("Неверный пароль!");
+        showToast("Неверный пароль!");
         return;
       }
 
@@ -197,7 +201,7 @@ export default function App() {
 
       saveUsersDb(usersList);
       setCurrentUser(user);
-      localStorage.setItem('madai_current_session_v3', JSON.stringify(user));
+      localStorage.setItem('madai_current_session_v4', JSON.stringify(user));
       setScreen('chat');
     }
   };
@@ -208,12 +212,12 @@ export default function App() {
       const updatedDb = [...usersList, pendingUser];
       saveUsersDb(updatedDb);
       setCurrentUser(pendingUser);
-      localStorage.setItem('madai_current_session_v3', JSON.stringify(pendingUser));
+      localStorage.setItem('madai_current_session_v4', JSON.stringify(pendingUser));
       setPendingUser(null);
       setScreen('chat');
-      alert("Почта успешно подтверждена!");
+      showToast("Почта подтверждена! Добро пожаловать.");
     } else {
-      alert("Неверный код подтверждения!");
+      showToast("Неверный код подтверждения!");
     }
   };
 
@@ -228,7 +232,7 @@ export default function App() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('madai_current_session_v3');
+    localStorage.removeItem('madai_current_session_v4');
     setCurrentUser(null);
     setScreen('landing');
   };
@@ -240,7 +244,7 @@ export default function App() {
         const newObj = { ...u, role: nextRole };
         if (currentUser && currentUser.id === targetId) {
           setCurrentUser(newObj);
-          localStorage.setItem('madai_current_session_v3', JSON.stringify(newObj));
+          localStorage.setItem('madai_current_session_v4', JSON.stringify(newObj));
         }
         return newObj;
       }
@@ -277,10 +281,10 @@ export default function App() {
       });
 
       const data = await response.json();
-      const reply = data.choices?.[0]?.message?.content || "Ошибка получения ответа от модели.";
+      const reply = data.choices?.[0]?.message?.content || "Ошибка получения ответа.";
       setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), text: reply, sender: 'ai' }]);
     } catch (e) {
-      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), text: "Ошибка связи с сервером.", sender: 'ai' }]);
+      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), text: "Ошибка соединения с сервером.", sender: 'ai' }]);
     } finally {
       setLoading(false);
     }
@@ -297,25 +301,25 @@ export default function App() {
           text: `💡 Сообщение от ${currentUser?.email} (IP: ${currentUser?.ip}):\n\n${bugText}`
         })
       });
-      alert("Сообщение отправлено в Telegram!");
+      showToast("Отправлено в Telegram!");
       setBugText('');
       setBugModal(false);
     } catch (e) {
-      alert("Ошибка отправки");
+      showToast("Ошибка отправки");
     }
   };
 
   const LanguageSelector = () => {
     const currentLangObj = LANGUAGES.find(l => l.code === langCode) || LANGUAGES[0];
     return (
-      <View style={{ position: 'relative', zIndex: 9999 }}>
+      <View style={{ zIndex: 9999 }}>
         <TouchableOpacity style={styles.langDropBtn} onPress={() => setLangDropdown(!langDropdown)}>
           <Text style={{ color: '#fff', fontSize: 13 }}>🌐 Язык: {currentLangObj.code}</Text>
         </TouchableOpacity>
 
         {langDropdown && (
           <View style={styles.langMenu}>
-            <ScrollView style={{ maxHeight: 200 }}>
+            <ScrollView style={{ maxHeight: 180 }}>
               {LANGUAGES.map((item) => (
                 <TouchableOpacity
                   key={item.code}
@@ -337,43 +341,50 @@ export default function App() {
     );
   };
 
+  // Toast
+  const ToastNotice = () => {
+    if (!toastVisible) return null;
+    return (
+      <View style={styles.toastContainer}>
+        <Text style={styles.toastText}>{toastMessage}</Text>
+      </View>
+    );
+  };
+
   // 1. ЛЕНДИНГ
   if (screen === 'landing') {
     return (
       <SafeAreaView style={styles.darkBg}>
-        <View style={styles.topNav}>
+        <ToastNotice />
+        <View style={styles.topNavCenter}>
           <LanguageSelector />
-          <View style={styles.statusBadge}>
-            <Text style={{ color: '#a1a1aa', fontSize: 12 }}>Статус: Онлайн </Text>
-            <View style={styles.greenDot} />
-          </View>
         </View>
 
-        <ScrollView contentContainerStyle={styles.landingContent}>
+        <ScrollView contentContainerStyle={styles.landingContentCenter}>
           <View style={styles.heroSection}>
             <Text style={styles.heroHeader}>MadAI</Text>
             <Text style={styles.heroSub}>Твой личный ИИ-арсенал. Премиум-доступ для всех. Скрытая мощь, доступная каждому.</Text>
-            <TouchableOpacity style={styles.mainCtaBtn} onPress={() => setScreen('auth')}>
+            <TouchableOpacity style={styles.mainCtaBtnGlow} onPress={() => setScreen('auth')}>
               <Text style={styles.mainCtaText}>Начать →</Text>
             </TouchableOpacity>
           </View>
 
           <Text style={styles.sectionTitle}>ПРЕИМУЩЕСТВА MadAI</Text>
 
-          <View style={styles.gridCards}>
-            <View style={styles.featureCard}>
+          <View style={styles.gridCardsCenter}>
+            <View style={styles.featureCardGlow}>
               <Text style={styles.cardIcon}>🛡️ 🎁</Text>
               <Text style={styles.cardTitle}>БАЗОВЫЙ ДОСТУП.</Text>
               <Text style={styles.cardDesc}>Мощные ИИ-модели — бесплатно. Полный доступ к ключевым возможностям.</Text>
             </View>
 
-            <View style={styles.featureCard}>
+            <View style={styles.featureCardGlow}>
               <Text style={styles.cardIcon}>🔒</Text>
               <Text style={styles.cardTitle}>АБСОЛЮТНАЯ ПРИВАТНОСТЬ.</Text>
               <Text style={styles.cardDesc}>Полная анонимность. Твои запросы остаются в тени. Ноль логов.</Text>
             </View>
 
-            <View style={styles.featureCard}>
+            <View style={styles.featureCardGlow}>
               <Text style={styles.cardIcon}>⏱️</Text>
               <Text style={styles.cardTitle}>ГЛУБОКАЯ КАЛИБРОВКА.</Text>
               <Text style={styles.cardDesc}>Настраивайте ИИ без скрытых корпоративных фильтров. Полная свобода и чистая производительность.</Text>
@@ -381,7 +392,7 @@ export default function App() {
           </View>
         </ScrollView>
 
-        <View style={styles.footerBar}>
+        <View style={styles.footerBarCenter}>
           <Text style={styles.footerText}>© 2026 MadAI. All rights reserved.</Text>
           <View style={{ flexDirection: 'row', gap: 12 }}>
             <Text style={styles.footerLink}>Политика приватности</Text>
@@ -397,15 +408,12 @@ export default function App() {
     const strength = getPasswordStrength();
     return (
       <SafeAreaView style={[styles.darkBg, { justifyContent: 'center', alignItems: 'center' }]}>
-        <View style={styles.topNavAbsolute}>
+        <ToastNotice />
+        <View style={styles.topNavAbsoluteCenter}>
           <LanguageSelector />
-          <View style={styles.statusBadge}>
-            <Text style={{ color: '#a1a1aa', fontSize: 12 }}>Статус: Онлайн </Text>
-            <View style={styles.greenDot} />
-          </View>
         </View>
 
-        <View style={styles.authCard}>
+        <View style={styles.authCardGlow}>
           <Text style={styles.authTitle}>{authMode === 'register' ? 'Создать аккаунт' : 'Войти в аккаунт'}</Text>
 
           {authMode === 'register' && (
@@ -451,7 +459,7 @@ export default function App() {
             </>
           )}
 
-          <TouchableOpacity style={styles.mainCtaBtn} onPress={handleStartAuth}>
+          <TouchableOpacity style={styles.mainCtaBtnGlow} onPress={handleStartAuth}>
             <Text style={styles.mainCtaText}>{authMode === 'register' ? 'Создать аккаунт →' : 'Войти →'}</Text>
           </TouchableOpacity>
 
@@ -463,7 +471,7 @@ export default function App() {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.footerBarAbsolute}>
+        <View style={styles.footerBarAbsoluteCenter}>
           <Text style={styles.footerText}>© 2026 MadAI. All rights reserved.</Text>
           <View style={{ flexDirection: 'row', gap: 12 }}>
             <Text style={styles.footerLink}>Privacy Policy</Text>
@@ -474,11 +482,12 @@ export default function App() {
     );
   }
 
-  // 3. ЭКРАН ВВОДА 6-ЗНАЧНОГО КОДА (OTP)
+  // 3. OTP ВВОД КОДА
   if (screen === 'verify') {
     return (
       <SafeAreaView style={[styles.darkBg, { justifyContent: 'center', alignItems: 'center' }]}>
-        <View style={styles.authCard}>
+        <ToastNotice />
+        <View style={styles.authCardGlow}>
           <Text style={styles.authTitleCenter}>Подтвердите вашу почту</Text>
           <Text style={styles.otpSubText}>
             Мы отправили код подтверждения на <Text style={{ color: '#fff' }}>{email}</Text>. Введите его ниже.
@@ -489,7 +498,7 @@ export default function App() {
               <TextInput
                 key={index}
                 ref={el => otpInputs.current[index] = el}
-                style={styles.otpBox}
+                style={styles.otpBoxGlow}
                 keyboardType="numeric"
                 maxLength={1}
                 value={digit}
@@ -498,7 +507,7 @@ export default function App() {
             ))}
           </View>
 
-          <TouchableOpacity style={styles.mainCtaBtn} onPress={handleVerifyOtp}>
+          <TouchableOpacity style={styles.mainCtaBtnGlow} onPress={handleVerifyOtp}>
             <Text style={styles.mainCtaText}>Подтвердить</Text>
           </TouchableOpacity>
 
@@ -512,17 +521,18 @@ export default function App() {
     );
   }
 
-  // 4. ЭКРАН ЧАТА И АДМИНКИ
+  // 4. ЧАТ
   const isUserVipOrAdmin = currentUser?.role === 'admin' || currentUser?.role === 'vip';
 
   return (
     <SafeAreaView style={styles.darkBg}>
+      <ToastNotice />
       <View style={styles.chatHeader}>
         <View style={styles.logoRow}>
           <View style={styles.boltIcon}><Text style={styles.boltText}>⚡</Text></View>
           <View>
             <Text style={{ color: '#10b981', fontWeight: 'bold', fontSize: 16 }}>MadAI</Text>
-            <Text style={{ color: '#71717a', fontSize: 10 }}>{currentUser?.email} | IP: {currentUser?.ip}</Text>
+            <Text style={{ color: '#71717a', fontSize: 10 }}>{currentUser?.email}</Text>
           </View>
         </View>
 
@@ -561,7 +571,7 @@ export default function App() {
               style={[styles.modelChip, selectedModel === m.id && styles.modelChipActive, !isUserVipOrAdmin && { opacity: 0.5 }]}
               onPress={() => {
                 if (!isUserVipOrAdmin) {
-                  alert("Премиум модели доступны только VIP пользователям!");
+                  showToast("Доступно только VIP пользователям!");
                   return;
                 }
                 setSelectedModel(m.id);
@@ -578,7 +588,7 @@ export default function App() {
       <FlatList
         data={messages}
         keyExtractor={item => item.id}
-        contentContainerStyle={{ padding: 12 }}
+        contentContainerStyle={{ padding: 12, maxWidth: 900, alignSelf: 'center', width: '100%' }}
         renderItem={({ item }) => (
           <View style={[styles.msgBox, item.sender === 'user' ? styles.userBox : styles.aiBox]}>
             <Text style={{ color: '#fff', fontSize: 14, lineHeight: 20 }}>{item.text}</Text>
@@ -586,27 +596,29 @@ export default function App() {
         )}
       />
 
-      <View style={styles.bottomBar}>
-        <TouchableOpacity style={styles.smallBtn} onPress={() => setMessages([])}>
-          <Text style={{ color: '#a1a1aa', fontSize: 11 }}>Очистить</Text>
-        </TouchableOpacity>
-        <TextInput
-          style={styles.chatInput}
-          value={input}
-          onChangeText={setInput}
-          placeholder="Спроси о чём угодно..."
-          placeholderTextColor="#52525b"
-        />
-        <TouchableOpacity style={styles.sendBtn} onPress={handleSend} disabled={loading}>
-          <Text style={{ color: '#fff', fontWeight: 'bold' }}>{loading ? "..." : "➤"}</Text>
-        </TouchableOpacity>
+      <View style={styles.bottomBarCenter}>
+        <View style={styles.inputInnerRow}>
+          <TouchableOpacity style={styles.smallBtn} onPress={() => setMessages([])}>
+            <Text style={{ color: '#a1a1aa', fontSize: 11 }}>Очистить</Text>
+          </TouchableOpacity>
+          <TextInput
+            style={styles.chatInput}
+            value={input}
+            onChangeText={setInput}
+            placeholder="Спроси о чём угодно..."
+            placeholderTextColor="#52525b"
+          />
+          <TouchableOpacity style={styles.sendBtn} onPress={handleSend} disabled={loading}>
+            <Text style={{ color: '#fff', fontWeight: 'bold' }}>{loading ? "..." : "➤"}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* АДМИНКА */}
       <Modal visible={adminModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
-            <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16, marginBottom: 12 }}>👑 Панель управления пользователями</Text>
+            <Text style={{ color: '#fff', fontWeight: 'bold', fontSize: 16, marginBottom: 12 }}>👑 Панель управления пользователей</Text>
             <ScrollView style={{ maxHeight: 280 }}>
               {usersList.map(u => (
                 <View key={u.id} style={styles.userRow}>
@@ -633,7 +645,7 @@ export default function App() {
         </View>
       </Modal>
 
-      {/* Модалка обращения */}
+      {/* Модалка бага */}
       <Modal visible={bugModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
@@ -658,46 +670,48 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  darkBg: { flex: 1, backgroundColor: '#050507' },
-  landingContent: { padding: 16, alignItems: 'center', paddingBottom: 80 },
+  darkBg: { flex: 1, backgroundColor: '#030305' },
+  landingContentCenter: { padding: 16, alignItems: 'center', justifyContent: 'center', minHeight: '85%', paddingBottom: 80 },
   
-  topNav: { width: '100%', maxWidth: 1000, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 16 },
-  topNavAbsolute: { position: 'absolute', top: 16, left: 16, right: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', zIndex: 10 },
-  
-  statusBadge: { flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: '#0d0e12', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20, borderWidth: 1, borderColor: '#1f1f23' },
-  greenDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#10b981' },
+  topNavCenter: { width: '100%', maxWidth: 1000, alignSelf: 'center', flexDirection: 'row', justifyContent: 'flex-start', padding: 16, zIndex: 999 },
+  topNavAbsoluteCenter: { position: 'absolute', top: 16, left: 0, right: 0, width: '100%', maxWidth: 1000, alignSelf: 'center', flexDirection: 'row', justifyContent: 'flex-start', paddingHorizontal: 16, zIndex: 999 },
 
-  langDropBtn: { backgroundColor: '#0d0e12', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: '#1f1f23' },
-  langMenu: { position: 'absolute', top: 38, left: 0, backgroundColor: '#0d0e12', borderRadius: 8, borderWidth: 1, borderColor: '#1f1f23', width: 130, padding: 4, elevation: 10 },
+  langDropBtn: { backgroundColor: '#0d0d12', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: '#1f2937' },
+  langMenu: { position: 'absolute', top: 42, left: 0, backgroundColor: '#0d0d12', borderRadius: 8, borderWidth: 1, borderColor: '#1f2937', width: 140, padding: 4, elevation: 10, zIndex: 9999 },
   langMenuItem: { padding: 8, borderRadius: 6 },
 
-  heroSection: { alignItems: 'center', marginVertical: 40, maxWidth: 650 },
-  heroHeader: { color: '#ffffff', fontSize: 64, fontWeight: '900', textAlign: 'center', letterSpacing: 1 },
+  heroSection: { alignItems: 'center', marginVertical: 30, maxWidth: 650, width: '100%' },
+  heroHeader: { color: '#ffffff', fontSize: 64, fontWeight: '900', textAlign: 'center', letterSpacing: 2 },
   heroSub: { color: '#9ca3af', fontSize: 16, textAlign: 'center', marginVertical: 20, lineHeight: 24 },
-  mainCtaBtn: { backgroundColor: 'transparent', paddingHorizontal: 28, paddingVertical: 12, borderRadius: 8, borderWidth: 1, borderColor: '#10b981', width: '100%', alignItems: 'center', shadowColor: '#10b981', shadowRadius: 10, shadowOpacity: 0.3 },
+  
+  mainCtaBtnGlow: { backgroundColor: '#05050a', paddingHorizontal: 28, paddingVertical: 14, borderRadius: 10, borderWidth: 1, borderColor: '#10b981', width: '100%', alignItems: 'center', shadowColor: '#10b981', shadowRadius: 15, shadowOpacity: 0.4 },
   mainCtaText: { color: '#ffffff', fontWeight: 'bold', fontSize: 15 },
 
-  sectionTitle: { color: '#ffffff', fontSize: 18, fontWeight: 'bold', letterSpacing: 2, marginTop: 40, marginBottom: 20 },
-  gridCards: { flexDirection: 'row', gap: 16, flexWrap: 'wrap', justifyContent: 'center', maxWidth: 1000 },
-  featureCard: { backgroundColor: '#0a0a0d', padding: 24, borderRadius: 12, borderWidth: 1, borderColor: '#18181b', width: 280 },
+  sectionTitle: { color: '#ffffff', fontSize: 16, fontWeight: 'bold', letterSpacing: 2, marginTop: 40, marginBottom: 20, textAlign: 'center' },
+  gridCardsCenter: { flexDirection: 'row', gap: 16, flexWrap: 'wrap', justifyContent: 'center', maxWidth: 1000, width: '100%' },
+  featureCardGlow: { backgroundColor: '#08080d', padding: 24, borderRadius: 12, borderWidth: 1, borderColor: '#1f2937', width: 280, shadowColor: '#10b981', shadowRadius: 10, shadowOpacity: 0.1 },
   cardIcon: { fontSize: 24, marginBottom: 12 },
   cardTitle: { color: '#ffffff', fontWeight: 'bold', fontSize: 13, letterSpacing: 1, marginBottom: 8 },
   cardDesc: { color: '#71717a', fontSize: 12, lineHeight: 18 },
 
-  footerBar: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-between', padding: 16, backgroundColor: '#050507', borderTopWidth: 1, borderColor: '#121215' },
-  footerBarAbsolute: { position: 'absolute', bottom: 16, left: 16, right: 16, flexDirection: 'row', justifyContent: 'space-between' },
-  footerText: { color: '#52525b', fontSize: 11 },
-  footerLink: { color: '#52525b', fontSize: 11 },
+  footerBarCenter: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-between', padding: 16, backgroundColor: '#030305', borderTopWidth: 1, borderColor: '#111827', width: '100%', maxWidth: 1000, alignSelf: 'center' },
+  footerBarAbsoluteCenter: { position: 'absolute', bottom: 16, left: 0, right: 0, flexDirection: 'row', justifyContent: 'space-between', width: '100%', maxWidth: 1000, alignSelf: 'center', paddingHorizontal: 16 },
+  footerText: { color: '#4b5563', fontSize: 11 },
+  footerLink: { color: '#4b5563', fontSize: 11 },
 
-  // АВТОРИЗАЦИЯ
-  authCard: { backgroundColor: '#0a0a0d', padding: 28, borderRadius: 16, borderWidth: 1, borderColor: '#1e293b', width: '90%', maxWidth: 400, shadowColor: '#3b82f6', shadowRadius: 15, shadowOpacity: 0.1 },
-  authTitle: { color: '#ffffff', fontSize: 28, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
+  // Toast
+  toastContainer: { position: 'absolute', bottom: 60, alignSelf: 'center', backgroundColor: '#10b981', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20, zIndex: 99999, shadowColor: '#000', shadowRadius: 10, shadowOpacity: 0.5 },
+  toastText: { color: '#000', fontWeight: 'bold', fontSize: 13 },
+
+  // Auth
+  authCardGlow: { backgroundColor: '#08080d', padding: 28, borderRadius: 16, borderWidth: 1, borderColor: '#1f2937', width: '90%', maxWidth: 420, shadowColor: '#3b82f6', shadowRadius: 20, shadowOpacity: 0.15 },
+  authTitle: { color: '#ffffff', fontSize: 26, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
   authTitleCenter: { color: '#ffffff', fontSize: 22, fontWeight: 'bold', textAlign: 'center', marginBottom: 8 },
   otpSubText: { color: '#71717a', fontSize: 13, textAlign: 'center', marginBottom: 20, lineHeight: 18 },
 
   inputWrapper: { marginBottom: 14 },
   inputLabel: { color: '#a1a1aa', fontSize: 12, marginBottom: 6 },
-  inputField: { backgroundColor: '#050507', color: '#fff', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#1e293b', fontSize: 13 },
+  inputField: { backgroundColor: '#030305', color: '#fff', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#1f2937', fontSize: 13 },
   strengthBarBg: { height: 3, backgroundColor: '#18181b', borderRadius: 2, marginTop: 6, overflow: 'hidden' },
   strengthBarFill: { height: '100%', borderRadius: 2 },
 
@@ -705,33 +719,34 @@ const styles = StyleSheet.create({
   checkbox: { width: 16, height: 16, borderRadius: 4, borderWidth: 1, borderColor: '#3b82f6' },
   checkboxActive: { backgroundColor: '#3b82f6' },
 
-  // OTP Код
+  // OTP
   otpContainer: { flexDirection: 'row', justifyContent: 'space-between', gap: 8, marginVertical: 20 },
-  otpBox: { width: 44, height: 50, backgroundColor: '#050507', borderRadius: 8, borderWidth: 1, borderColor: '#10b981', color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
+  otpBoxGlow: { width: 44, height: 50, backgroundColor: '#030305', borderRadius: 8, borderWidth: 1, borderColor: '#10b981', color: '#fff', fontSize: 20, fontWeight: 'bold', textAlign: 'center' },
 
-  // ЧАТ
-  chatHeader: { padding: 12, borderBottomWidth: 1, borderColor: '#18181b', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  // Chat
+  chatHeader: { padding: 12, borderBottomWidth: 1, borderColor: '#111827', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', maxWidth: 1000, alignSelf: 'center', width: '100%' },
   logoRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   boltIcon: { width: 32, height: 32, borderRadius: 8, backgroundColor: '#10b981', justifyContent: 'center', alignItems: 'center' },
   boltText: { color: '#09090b', fontWeight: 'bold', fontSize: 16 },
   adminBadgeBtn: { backgroundColor: '#ef4444', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6 },
-  smallBtn: { backgroundColor: '#18181b', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: '#27272a' },
+  smallBtn: { backgroundColor: '#111827', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: '#1f2937' },
 
-  modelBar: { flexDirection: 'row', alignItems: 'center', padding: 8, paddingHorizontal: 12, backgroundColor: '#0a0a0d', borderBottomWidth: 1, borderColor: '#1f1f23' },
-  modelChip: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, backgroundColor: '#18181b', borderWidth: 1, borderColor: '#27272a' },
+  modelBar: { flexDirection: 'row', alignItems: 'center', padding: 8, paddingHorizontal: 12, backgroundColor: '#08080d', borderBottomWidth: 1, borderColor: '#111827', maxWidth: 1000, alignSelf: 'center', width: '100%' },
+  modelChip: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6, backgroundColor: '#111827', borderWidth: 1, borderColor: '#1f2937' },
   modelChipActive: { borderColor: '#10b981', backgroundColor: '#064e3b' },
 
   msgBox: { padding: 12, marginVertical: 4, borderRadius: 10, maxWidth: '82%' },
   userBox: { backgroundColor: '#059669', alignSelf: 'flex-end' },
-  aiBox: { backgroundColor: '#0a0a0d', alignSelf: 'flex-start', borderWidth: 1, borderColor: '#1f1f23' },
+  aiBox: { backgroundColor: '#08080d', alignSelf: 'flex-start', borderWidth: 1, borderColor: '#1f2937' },
 
-  bottomBar: { flexDirection: 'row', padding: 12, borderTopWidth: 1, borderColor: '#18181b', gap: 8, alignItems: 'center' },
-  chatInput: { flex: 1, backgroundColor: '#0a0a0d', color: '#fff', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#1f1f23', fontSize: 13 },
+  bottomBarCenter: { borderTopWidth: 1, borderColor: '#111827', padding: 12, width: '100%', maxWidth: 1000, alignSelf: 'center' },
+  inputInnerRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+  chatInput: { flex: 1, backgroundColor: '#08080d', color: '#fff', padding: 10, borderRadius: 8, borderWidth: 1, borderColor: '#1f2937', fontSize: 13 },
   sendBtn: { backgroundColor: '#10b981', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 8 },
 
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', padding: 20 },
-  modalCard: { backgroundColor: '#0a0a0d', padding: 18, borderRadius: 12, borderWidth: 1, borderColor: '#1f1f23' },
-  modalArea: { backgroundColor: '#050507', color: '#fff', padding: 10, borderRadius: 8, height: 90, textAlignVertical: 'top', borderWidth: 1, borderColor: '#27272a' },
-  userRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderColor: '#1f1f23' },
+  modalCard: { backgroundColor: '#08080d', padding: 18, borderRadius: 12, borderWidth: 1, borderColor: '#1f2937', maxWidth: 500, alignSelf: 'center', width: '100%' },
+  modalArea: { backgroundColor: '#030305', color: '#fff', padding: 10, borderRadius: 8, height: 90, textAlignVertical: 'top', borderWidth: 1, borderColor: '#1f2937' },
+  userRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderColor: '#1f2937' },
   roleBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6 }
 });
