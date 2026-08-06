@@ -2,13 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, Modal, SafeAreaView, ScrollView } from 'react-native';
 
 const OPENROUTER_API_KEY = "sk-or-v1-cf090582aa70565603ee80882ad90c9b0c797c27de40cacc70"; 
-const TELEGRAM_BOT_TOKEN = "8989304260:AAFT1zUOYHybijCklZSrJOtazpylsNWnBXw"; 
+const TELEGRAM_BOT_TOKEN = "8989304260:AAFT1zU0YHybijCklZSrJOtazpylsNWnBXw"; 
 const TELEGRAM_CHAT_ID = "1328175221";
+
+// Твой суперадмин
+const ADMIN_EMAIL = "glinkevichtm@gmail.com";
+
+const LANGUAGES = ['RU', 'EN', 'ES', 'DE', 'ZH'];
 
 const I18N = {
   RU: {
     heroTitle: "MadAI",
-    heroSub: "Твой личный ИИ-арсенал от MadAI. Без карт, без подписок, навсегда.",
+    heroSub: "Твой личный ИИ-арсенал. Без карт, без подписок, навсегда.",
     startBtn: "Начать →",
     loginTab: "Войти",
     regTab: "Создать аккаунт",
@@ -17,19 +22,16 @@ const I18N = {
     passPlace: "••••••••",
     regBtn: "Создать аккаунт",
     loginBtn: "Войти в систему",
-    whyTitle: "Почему MadAI",
+    whyTitle: "Преимущества MadAI",
     f1Title: "Без карт и подписок",
-    f1Desc: "Бесплатно навсегда. Никаких скрытых платежей, триалов или карт.",
-    f2Title: "Мульти-провайдер и ротация",
-    f2Desc: "Автопереключение ключей между провайдерами — чат без перебоев.",
+    f1Desc: "Бесплатно навсегда. Никаких скрытых платежей и триалов.",
     bugBtn: "💡 Идея / Баг",
     newChat: "Новый чат",
     askPlace: "Спроси о чём угодно...",
-    adminTitle: "Панель администратора",
   },
   EN: {
     heroTitle: "MadAI",
-    heroSub: "Your personal AI arsenal from MadAI. No cards, no subscriptions, forever.",
+    heroSub: "Your personal AI arsenal. No cards, no subscriptions, forever.",
     startBtn: "Get Started →",
     loginTab: "Sign In",
     regTab: "Create Account",
@@ -39,36 +41,31 @@ const I18N = {
     regBtn: "Create Account",
     loginBtn: "Sign In",
     whyTitle: "Why MadAI",
-    f1Title: "No Credit Cards Required",
-    f1Desc: "Free forever. No hidden charges, trials or credit cards.",
-    f2Title: "Multi-provider Rotation",
-    f2Desc: "Automatic key rotation between providers — seamless chat experience.",
+    f1Title: "100% Free",
+    f1Desc: "Free forever. No hidden charges or credit cards required.",
     bugBtn: "💡 Idea / Bug",
     newChat: "New Chat",
     askPlace: "Ask anything...",
-    adminTitle: "Admin Dashboard",
   }
 };
 
 export default function App() {
-  const [lang, setLang] = useState('RU');
-  const t = I18N[lang];
+  const [langIndex, setLangIndex] = useState(0);
+  const currentLang = LANGUAGES[langIndex];
+  const t = I18N[currentLang] || I18N.RU;
 
-  // Пользователи и Авторизация
-  const [screen, setScreen] = useState('landing'); // 'landing' | 'auth' | 'chat'
-  const [authMode, setAuthMode] = useState('register'); // 'register' | 'login'
+  const [screen, setScreen] = useState('landing');
+  const [authMode, setAuthMode] = useState('register');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   
   const [currentUser, setCurrentUser] = useState(null);
   const [usersList, setUsersList] = useState([
-    { id: '1', name: 'Admin User', email: 'admin@madlinov.xyz', role: 'admin' },
-    { id: '2', name: 'Alex', email: 'alex@gmail.com', role: 'vip' },
-    { id: '3', name: 'User', email: 'test@gmail.com', role: 'user' },
+    { id: '1', name: 'Admin', email: ADMIN_EMAIL, role: 'admin' },
+    { id: '2', name: 'User', email: 'test@gmail.com', role: 'user' },
   ]);
 
-  // Чат и Модалки
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -86,18 +83,26 @@ export default function App() {
     }
   }, []);
 
+  const nextLang = () => {
+    setLangIndex((prev) => (prev + 1) % LANGUAGES.length);
+  };
+
   const handleAuth = () => {
     if (!email.includes('@') || password.length < 4) {
       alert("Заполните корректно email и пароль!");
       return;
     }
 
-    let user = usersList.find(u => u.email.toLowerCase() === email.toLowerCase());
+    const cleanEmail = email.trim().toLowerCase();
+    const isAdmin = cleanEmail === ADMIN_EMAIL.toLowerCase();
+    const role = isAdmin ? 'admin' : 'user';
+
+    let user = usersList.find(u => u.email.toLowerCase() === cleanEmail);
     if (!user) {
-      // Автоматически даем админку первому акку или по имени
-      const role = usersList.length === 0 || email.includes('admin') ? 'admin' : 'user';
-      user = { id: Date.now().toString(), name: name || 'Пользователь', email, role };
+      user = { id: Date.now().toString(), name: name || 'Пользователь', email: cleanEmail, role };
       setUsersList(prev => [...prev, user]);
+    } else {
+      user.role = role;
     }
 
     setCurrentUser(user);
@@ -132,7 +137,6 @@ export default function App() {
     setInput('');
     setLoading(true);
 
-    // Выбор модели в зависимости от роли
     const selectedModel = (currentUser?.role === 'admin' || currentUser?.role === 'vip') 
       ? 'deepseek/deepseek-chat' 
       : 'google/gemini-2.5-flash:free';
@@ -173,10 +177,10 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chat_id: TELEGRAM_CHAT_ID,
-          text: `💡 Баг/Идея от ${currentUser?.email || 'Гостя'} (${currentUser?.role || 'user'}):\n\n${bugText}`
+          text: `💡 Сообщение от ${currentUser?.email}:\n\n${bugText}`
         })
       });
-      alert("Доставлено в Telegram!");
+      alert("Отправлено в Telegram!");
       setBugText('');
       setBugModal(false);
     } catch (e) {
@@ -184,7 +188,7 @@ export default function App() {
     }
   };
 
-  // 1. ЛЕНДИНГ (СТИЛЬ BOLT)
+  // ЛЕНДИНГ
   if (screen === 'landing') {
     return (
       <SafeAreaView style={styles.darkBg}>
@@ -194,9 +198,9 @@ export default function App() {
               <View style={styles.boltIcon}><Text style={styles.boltText}>⚡</Text></View>
               <Text style={styles.logoTitle}>MadAI</Text>
             </View>
-            <View style={{ flexDirection: 'row', gap: 10, alignItems: 'center' }}>
-              <TouchableOpacity style={styles.langTag} onPress={() => setLang(l => l === 'RU' ? 'EN' : 'RU')}>
-                <Text style={styles.langText}>{lang}</Text>
+            <View style={{ flexDirection: 'row', gap: 12, alignItems: 'center' }}>
+              <TouchableOpacity style={styles.langTagBig} onPress={nextLang}>
+                <Text style={styles.langTextBig}>🌐 {currentLang}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.navBtn} onPress={() => setScreen('auth')}>
                 <Text style={styles.navBtnText}>{t.startBtn}</Text>
@@ -205,7 +209,6 @@ export default function App() {
           </View>
 
           <View style={styles.heroSection}>
-            <View style={styles.badge}><Text style={styles.badgeText}>• На базе OpenRouter</Text></View>
             <Text style={styles.heroHeader}>{t.heroTitle}</Text>
             <Text style={styles.heroSub}>{t.heroSub}</Text>
             <TouchableOpacity style={styles.mainCtaBtn} onPress={() => setScreen('auth')}>
@@ -220,18 +223,13 @@ export default function App() {
               <Text style={styles.cardTitle}>{t.f1Title}</Text>
               <Text style={styles.cardDesc}>{t.f1Desc}</Text>
             </View>
-            <View style={styles.featureCard}>
-              <Text style={styles.cardIcon}>🔄</Text>
-              <Text style={styles.cardTitle}>{t.f2Title}</Text>
-              <Text style={styles.cardDesc}>{t.f2Desc}</Text>
-            </View>
           </View>
         </ScrollView>
       </SafeAreaView>
     );
   }
 
-  // 2. АВТОРИЗАЦИЯ / РЕГИСТРАЦИЯ
+  // АВТОРИЗАЦИЯ
   if (screen === 'auth') {
     return (
       <SafeAreaView style={[styles.darkBg, { justifyContent: 'center', alignItems: 'center' }]}>
@@ -240,7 +238,7 @@ export default function App() {
             <View style={styles.boltIcon}><Text style={styles.boltText}>⚡</Text></View>
             <View>
               <Text style={styles.logoTitle}>MadAI</Text>
-              <Text style={styles.authSub}>Бесплатно навсегда — без карты</Text>
+              <Text style={styles.authSub}>Авторизация</Text>
             </View>
           </View>
 
@@ -267,23 +265,22 @@ export default function App() {
     );
   }
 
-  // 3. ЧАТ И АДМИНКА
+  // ЧАТ И АДМИНКА
   return (
     <SafeAreaView style={styles.darkBg}>
-      {/* Шапка чата */}
       <View style={styles.chatHeader}>
         <View style={styles.logoRow}>
           <View style={styles.boltIcon}><Text style={styles.boltText}>⚡</Text></View>
           <View>
             <Text style={{ color: '#10b981', fontWeight: 'bold', fontSize: 16 }}>MadAI</Text>
-            <Text style={{ color: '#71717a', fontSize: 10 }}>{currentUser?.email} ({currentUser?.role?.toUpperCase()})</Text>
+            <Text style={{ color: '#71717a', fontSize: 10 }}>{currentUser?.email}</Text>
           </View>
         </View>
 
         <View style={{ flexDirection: 'row', gap: 8 }}>
-          {currentUser?.role === 'admin' && (
+          {currentUser?.email?.toLowerCase() === ADMIN_EMAIL.toLowerCase() && (
             <TouchableOpacity style={styles.adminBadgeBtn} onPress={() => setAdminModal(true)}>
-              <Text style={{ color: '#fff', fontSize: 11 }}>👑 Управление</Text>
+              <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>👑 Управление</Text>
             </TouchableOpacity>
           )}
           <TouchableOpacity style={styles.smallBtn} onPress={() => setBugModal(true)}>
@@ -295,7 +292,6 @@ export default function App() {
         </View>
       </View>
 
-      {/* Список сообщений */}
       <FlatList
         data={messages}
         keyExtractor={item => item.id}
@@ -307,7 +303,6 @@ export default function App() {
         )}
       />
 
-      {/* Нижняя панель */}
       <View style={styles.bottomBar}>
         <TouchableOpacity style={styles.smallBtn} onPress={() => setMessages([])}>
           <Text style={{ color: '#a1a1aa', fontSize: 11 }}>{t.newChat}</Text>
@@ -324,7 +319,7 @@ export default function App() {
         </TouchableOpacity>
       </View>
 
-      {/* Модалка АДМИНКИ */}
+      {/* АДМИНКА */}
       <Modal visible={adminModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
@@ -355,11 +350,11 @@ export default function App() {
         </View>
       </Modal>
 
-      {/* Модалка Багрепорта */}
+      {/* Модалка обратной связи */}
       <Modal visible={bugModal} transparent animationType="fade">
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
-            <Text style={{ color: '#fff', fontWeight: 'bold', marginBottom: 8 }}>💡 Идея или найденный баг:</Text>
+            <Text style={{ color: '#fff', fontWeight: 'bold', marginBottom: 8 }}>💡 Идея или баг:</Text>
             <TextInput
               style={styles.modalArea}
               multiline
@@ -387,24 +382,24 @@ const styles = StyleSheet.create({
   boltIcon: { width: 32, height: 32, borderRadius: 8, backgroundColor: '#10b981', justifyContent: 'center', alignItems: 'center' },
   boltText: { color: '#09090b', fontWeight: 'bold', fontSize: 16 },
   logoTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold' },
-  langTag: { backgroundColor: '#18181b', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 6, borderWidth: 1, borderColor: '#27272a' },
-  langText: { color: '#10b981', fontSize: 11, fontWeight: 'bold' },
-  navBtn: { backgroundColor: '#18181b', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: '#27272a' },
-  navBtnText: { color: '#fff', fontSize: 12, fontWeight: 'bold' },
+  
+  langTagBig: { backgroundColor: '#18181b', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: '#10b981' },
+  langTextBig: { color: '#10b981', fontSize: 14, fontWeight: 'bold' },
+  
+  navBtn: { backgroundColor: '#18181b', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: '#27272a' },
+  navBtnText: { color: '#fff', fontSize: 13, fontWeight: 'bold' },
 
   heroSection: { alignItems: 'center', marginVertical: 40, maxWidth: 600 },
-  badge: { backgroundColor: '#18181b', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, borderWidth: 1, borderColor: '#27272a', marginBottom: 16 },
-  badgeText: { color: '#10b981', fontSize: 11 },
-  heroHeader: { color: '#10b981', fontSize: 48, fontWeight: '900', letterSpacing: 1, textAlign: 'center' },
-  heroSub: { color: '#a1a1aa', fontSize: 15, textAlign: 'center', marginVertical: 16, lineHeight: 22 },
-  mainCtaBtn: { backgroundColor: '#10b981', paddingHorizontal: 24, paddingVertical: 12, borderRadius: 8, width: '100%', alignItems: 'center' },
-  mainCtaText: { color: '#09090b', fontWeight: 'bold', fontSize: 15 },
+  heroHeader: { color: '#10b981', fontSize: 52, fontWeight: '900', letterSpacing: 1, textAlign: 'center' },
+  heroSub: { color: '#a1a1aa', fontSize: 16, textAlign: 'center', marginVertical: 16, lineHeight: 22 },
+  mainCtaBtn: { backgroundColor: '#10b981', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 8, width: '100%', alignItems: 'center' },
+  mainCtaText: { color: '#09090b', fontWeight: 'bold', fontSize: 16 },
 
   sectionTitle: { color: '#fff', fontSize: 20, fontWeight: 'bold', marginTop: 20, marginBottom: 16 },
   gridCards: { flexDirection: 'row', gap: 12, flexWrap: 'wrap', justifyContent: 'center', maxWidth: 900 },
-  featureCard: { backgroundColor: '#121215', padding: 20, borderRadius: 12, borderWidth: 1, borderColor: '#1f1f23', width: 280 },
-  cardIcon: { fontSize: 20, marginBottom: 8 },
-  cardTitle: { color: '#fff', fontWeight: 'bold', fontSize: 14, marginBottom: 4 },
+  featureCard: { backgroundColor: '#121215', padding: 20, borderRadius: 12, borderWidth: 1, borderColor: '#1f1f23', width: 300 },
+  cardIcon: { fontSize: 22, marginBottom: 8 },
+  cardTitle: { color: '#fff', fontWeight: 'bold', fontSize: 15, marginBottom: 4 },
   cardDesc: { color: '#71717a', fontSize: 12, lineHeight: 18 },
 
   authCard: { backgroundColor: '#121215', padding: 24, borderRadius: 16, borderWidth: 1, borderColor: '#1f1f23', width: '90%', maxWidth: 380 },
@@ -414,7 +409,7 @@ const styles = StyleSheet.create({
   inputField: { backgroundColor: '#09090b', color: '#fff', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#27272a', marginBottom: 10, fontSize: 13 },
 
   chatHeader: { padding: 12, borderBottomWidth: 1, borderColor: '#18181b', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  adminBadgeBtn: { backgroundColor: '#8b5cf6', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6 },
+  adminBadgeBtn: { backgroundColor: '#ef4444', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6 },
   smallBtn: { backgroundColor: '#18181b', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: '#27272a' },
   msgBox: { padding: 12, marginVertical: 4, borderRadius: 10, maxWidth: '82%' },
   userBox: { backgroundColor: '#059669', alignSelf: 'flex-end' },
