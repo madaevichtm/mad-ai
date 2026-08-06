@@ -1,99 +1,95 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, Modal, SafeAreaView } from 'react-native';
 
-// --- НАСТРОЙКИ КЛЮЧЕЙ И БОТА ---
-const OPENROUTER_API_KEY = "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"; 
+const OPENROUTER_API_KEY = "sk-or-v1-cf090582aa70565603ee80882ad90c9b0c797c27de40cacc70"; 
 const TELEGRAM_BOT_TOKEN = "8989304260:AAFT1zU0YHybijCklZSrJ0tazpylsNWnBXw"; 
-const TELEGRAM_CHAT_ID = "1328175221";
-
-const I18N = {
-  RU: {
-    slogan: "Your personal AI arsenal from MadAI. No cards, no subscriptions, for all time.",
-    placeholder: "Спроси о чём угодно...",
-    bugBtn: "💡 Идея / Баг",
-    newChat: "Новый чат",
-    limitErr: "Лимит 100 запросов в день исчерпан!",
-    shortErr: "Запрос слишком короткий (мин. 3 символа)",
-    send: "Отправить",
-    cancel: "Отмена"
-  },
-  EN: {
-    slogan: "Your personal AI arsenal from MadAI. No cards, no subscriptions, for all time.",
-    placeholder: "Ask anything...",
-    bugBtn: "💡 Idea / Bug",
-    newChat: "New Chat",
-    limitErr: "Daily limit of 100 requests reached!",
-    shortErr: "Query too short (min 3 chars)",
-    send: "Send",
-    cancel: "Cancel"
-  }
-};
+const TELEGRAM_CHAT_ID = "1328128362";
 
 export default function App() {
-  const [lang, setLang] = useState('RU');
-  const t = I18N[lang] || I18N.RU;
+  const [userEmail, setUserEmail] = useState('');
+  const [inputEmail, setInputEmail] = useState('');
+  const [isAuth, setIsAuth] = useState(false);
+
+  // VIP и Админка
+  const [isVip, setIsVip] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(true); // Для тебя как админа
 
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
-  const [user, setUser] = useState({ email: 'user@gmail.com', isVip: false, dailyRequests: 0, ip: '192.168.1.1' });
-  const [isAdmin, setIsAdmin] = useState(true);
   const [feedbackModal, setFeedbackModal] = useState(false);
   const [feedbackText, setFeedbackText] = useState('');
-  const [abortController, setAbortController] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const compressPrompt = (text) => {
-    return text.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '').replace(/\s+/g, ' ').trim();
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('madai_user_email');
+    if (savedEmail) {
+      setUserEmail(savedEmail);
+      setIsAuth(true);
+    }
+  }, []);
+
+  const handleLogin = () => {
+    if (!inputEmail.includes('@') || inputEmail.length < 5) {
+      alert("Введите корректный Email!");
+      return;
+    }
+    localStorage.setItem('madai_user_email', inputEmail);
+    setUserEmail(inputEmail);
+    setIsAuth(true);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('madai_user_email');
+    setIsAuth(false);
+    setUserEmail('');
   };
 
   const handleSend = async () => {
-    const raw = input.trim();
-    if (raw.length < 3) { alert(t.shortErr); return; }
-    if (!user.isVip && user.dailyRequests >= 100) { alert(t.limitErr); return; }
+    const text = input.trim();
+    if (!text || loading) return;
 
-    const compressed = compressPrompt(raw);
-    const newMsg = { id: Date.now().toString(), text: raw, sender: 'user' };
-    
-    const recentHistory = messages.slice(-4).map(m => ({
-      role: m.sender === 'user' ? 'user' : 'assistant',
-      content: compressPrompt(m.text)
-    }));
-
-    setMessages(prev => [...prev, newMsg]);
+    const userMsg = { id: Date.now().toString(), text, sender: 'user' };
+    setMessages(prev => [...prev, userMsg]);
     setInput('');
+    setLoading(true);
 
-    const selectedModel = user.isVip ? 'deepseek/deepseek-chat' : 'deepseek/deepseek-chat:free';
-    const controller = new AbortController();
-    setAbortController(controller);
+    // Бесплатникам — Gemini 2.5 Flash Free, VIP-ам — DeepSeek V3 (Chat)
+    const selectedModel = isVip ? 'deepseek/deepseek-chat' : 'google/gemini-2.5-flash:free';
 
     try {
       const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
-        signal: controller.signal,
         headers: {
           "Authorization": `Bearer ${OPENROUTER_API_KEY}`,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "HTTP-Referer": "https://madlinov.xyz",
+          "X-Title": "MadAI"
         },
         body: JSON.stringify({
           model: selectedModel,
-          messages: [...recentHistory, { role: "user", content: compressed }]
+          messages: [
+            ...messages.slice(-6).map(m => ({
+              role: m.sender === 'user' ? 'user' : 'assistant',
+              content: m.text
+            })),
+            { role: "user", content: text }
+          ]
         })
       });
 
       const data = await response.json();
-      const aiReply = data.choices[0]?.message?.content || "Error";
-
-      setMessages(prev => [...prev, { id: Date.now().toString(), text: aiReply, sender: 'ai' }]);
-      setUser(prev => ({ ...prev, dailyRequests: prev.dailyRequests + 1 }));
-    } catch (err) {
-      if (err.name !== 'AbortError') {
-        setMessages(prev => [...prev, { id: Date.now().toString(), text: "Connection error", sender: 'ai' }]);
+      if (data.error) {
+        throw new Error(data.error.message || " Ошибка API OpenRouter");
       }
+
+      const reply = data.choices?.[0]?.message?.content || "Ошибка ответа.";
+      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), text: reply, sender: 'ai' }]);
+    } catch (e) {
+      setMessages(prev => [...prev, { id: (Date.now() + 1).toString(), text: ` Ошибка соединения: ${e.message}`, sender: 'ai' }]);
     } finally {
-      setAbortController(null);
+      setLoading(false);
     }
   };
-
-  const stopGeneration = () => { if (abortController) abortController.abort(); };
 
   const sendFeedback = async () => {
     if (!feedbackText.trim()) return;
@@ -103,49 +99,77 @@ export default function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           chat_id: TELEGRAM_CHAT_ID,
-          text: `💡 Feedback from ${user.email} (IP: ${user.ip}):\n${feedbackText}`
+          text: `💡 Баг/Идея от ${userEmail}:\n\n${feedbackText}`
         })
       });
-      alert("Sent!");
+      alert("Отправлено в Telegram!");
       setFeedbackText('');
       setFeedbackModal(false);
     } catch (e) {
-      alert("Error sending");
+      alert("Ошибка отправки");
     }
   };
 
+  if (!isAuth) {
+    return (
+      <SafeAreaView style={styles.authContainer}>
+        <View style={styles.authCard}>
+          <Text style={styles.logo}>MadAI</Text>
+          <Text style={styles.authSub}>Авторизация по Email</Text>
+          
+          <TextInput
+            style={styles.authInput}
+            placeholder="Ваш Email"
+            placeholderTextColor="#52525b"
+            value={inputEmail}
+            onChangeText={setInputEmail}
+            autoCapitalize="none"
+          />
+
+          <TouchableOpacity style={styles.authBtn} onPress={handleLogin}>
+            <Text style={styles.authBtnText}>Войти</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
+      {/* Шапка */}
       <View style={styles.header}>
-        <View style={{ flex: 1 }}>
+        <View>
           <Text style={styles.logo}>MadAI</Text>
-          <Text style={styles.subtext}>{t.slogan}</Text>
+
+          <Text style={styles.userText}>{userEmail}</Text>
         </View>
 
         <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.langBtn} onPress={() => setLang(prev => prev === 'EN' ? 'RU' : 'EN')}>
-            <Text style={styles.langText}>{lang}</Text>
-          </TouchableOpacity>
           <TouchableOpacity style={styles.bugBtn} onPress={() => setFeedbackModal(true)}>
-            <Text style={{ color: '#fff', fontSize: 11 }}>{t.bugBtn}</Text>
+            <Text style={{ color: '#fff', fontSize: 12 }}>💡 Баг / Идея</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+            <Text style={{ color: '#ef4444', fontSize: 12 }}>Выйти</Text>
           </TouchableOpacity>
         </View>
       </View>
 
+      {/* Панель администратора / VIP */}
       {isAdmin && (
         <View style={styles.adminBar}>
-          <Text style={styles.adminText}>ADMIN | {user.email} | IP: {user.ip}</Text>
+          <Text style={styles.adminText}>Модель: {isVip ? ' DeepSeek V3 (Платная VIP)' : ' Gemini 2.5 (Бесплатная)'}</Text>
           <TouchableOpacity 
-            style={[styles.adminBadge, { backgroundColor: user.isVip ? '#e11d48' : '#10b981' }]} 
-            onPress={() => setUser(prev => ({ ...prev, isVip: !prev.isVip }))}
+            style={[styles.adminBadge, { backgroundColor: isVip ? '#e11d48' : '#10b981' }]} 
+            onPress={() => setIsVip(!isVip)}
           >
-            <Text style={{ color: '#fff', fontSize: 10, fontWeight: 'bold' }}>
-              {user.isVip ? 'VIP Active (DeepSeek V3)' : 'Grant VIP'}
+            <Text style={{ color: '#fff', fontSize: 11, fontWeight: 'bold' }}>
+              {isVip ? 'VIP Активен (DeepSeek V3)' : 'Выдать VIP'}
             </Text>
           </TouchableOpacity>
         </View>
       )}
 
+      {/* Чат */}
       <FlatList
         data={messages}
         keyExtractor={item => item.id}
@@ -157,47 +181,44 @@ export default function App() {
         )}
       />
 
+      {/* Ввод */}
       <View style={styles.inputBar}>
         <TouchableOpacity style={styles.resetBtn} onPress={() => setMessages([])}>
-          <Text style={{ color: '#a1a1aa', fontSize: 11 }}>{t.newChat}</Text>
+          <Text style={{ color: '#a1a1aa', fontSize: 11 }}>Очистить</Text>
         </TouchableOpacity>
 
         <TextInput
           style={styles.input}
           value={input}
           onChangeText={setInput}
-          placeholder={t.placeholder}
+          placeholder="Спроси о чём угодно..."
           placeholderTextColor="#52525b"
         />
 
-        {abortController ? (
-          <TouchableOpacity style={[styles.sendBtn, { backgroundColor: '#e11d48' }]} onPress={stopGeneration}>
-            <Text style={{ color: '#fff', fontWeight: 'bold' }}>Stop</Text>
-          </TouchableOpacity>
-        ) : (
-          <TouchableOpacity style={styles.sendBtn} onPress={handleSend}>
-            <Text style={{ color: '#fff', fontWeight: 'bold' }}>➤</Text>
-          </TouchableOpacity>
-        )}
+        <TouchableOpacity style={styles.sendBtn} onPress={handleSend} disabled={loading}>
+          <Text style={{ color: '#fff', fontWeight: 'bold' }}>{loading ? "..." : "➤"}</Text>
+        </TouchableOpacity>
       </View>
 
+      {/* Модалка */}
       <Modal visible={feedbackModal} transparent animationType="fade">
         <View style={styles.modalBg}>
           <View style={styles.modalCard}>
+            <Text style={{ color: '#fff', fontWeight: 'bold', marginBottom: 8 }}>Сообщение разработчику:</Text>
             <TextInput
               style={styles.modalInput}
               multiline
               value={feedbackText}
               onChangeText={setFeedbackText}
-              placeholder="Describe your idea or bug..."
+              placeholder="Напишите идею или найденный баг..."
               placeholderTextColor="#52525b"
             />
             <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 8, marginTop: 10 }}>
               <TouchableOpacity style={styles.modalBtn} onPress={() => setFeedbackModal(false)}>
-                <Text style={{ color: '#fff' }}>{t.cancel}</Text>
+                <Text style={{ color: '#fff' }}>Отмена</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.modalBtn, { backgroundColor: '#10b981' }]} onPress={sendFeedback}>
-                <Text style={{ color: '#fff' }}>{t.send}</Text>
+                <Text style={{ color: '#fff' }}>Отправить</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -208,26 +229,36 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
+  authContainer: { flex: 1, backgroundColor: '#09090b', justifyContent: 'center', alignItems: 'center' },
+  authCard: { backgroundColor: '#18181b', padding: 24, borderRadius: 12, borderWidth: 1, borderColor: '#27272a', width: '90%', maxWidth: 360 },
+  authSub: { color: '#a1a1aa', fontSize: 13, marginVertical: 12 },
+  authInput: { backgroundColor: '#09090b', color: '#fff', padding: 12, borderRadius: 8, borderWidth: 1, borderColor: '#27272a', marginBottom: 12 },
+  authBtn: { backgroundColor: '#10b981', padding: 12, borderRadius: 8, alignItems: 'center' },
+  authBtnText: { color: '#fff', fontWeight: 'bold' },
+
   container: { flex: 1, backgroundColor: '#09090b' },
   header: { padding: 12, borderBottomWidth: 1, borderColor: '#18181b', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  logo: { color: '#10b981', fontSize: 20, fontWeight: '900', letterSpacing: 0.5 },
-  subtext: { color: '#71717a', fontSize: 9, marginTop: 2, maxWidth: 220 },
-  headerRight: { flexDirection: 'row', gap: 6, alignItems: 'center' },
-  langBtn: { backgroundColor: '#18181b', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, borderWidth: 1, borderColor: '#27272a' },
-  langText: { color: '#10b981', fontSize: 10, fontWeight: 'bold' },
-  bugBtn: { backgroundColor: '#18181b', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, borderWidth: 1, borderColor: '#27272a' },
-  adminBar: { backgroundColor: '#111827', padding: 6, paddingHorizontal: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1, borderColor: '#1f2937' },
-  adminText: { color: '#9ca3af', fontSize: 10 },
-  adminBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 4 },
-  msg: { padding: 10, marginVertical: 3, marginHorizontal: 10, borderRadius: 8, maxWidth: '82%' },
+  logo: { color: '#10b981', fontSize: 20, fontWeight: '900' },
+  userText: { color: '#71717a', fontSize: 11, marginTop: 2 },
+  headerRight: { flexDirection: 'row', gap: 8 },
+  bugBtn: { backgroundColor: '#18181b', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: '#27272a' },
+  logoutBtn: { backgroundColor: '#18181b', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 6, borderWidth: 1, borderColor: '#27272a' },
+
+  adminBar: { backgroundColor: '#111827', padding: 8, paddingHorizontal: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderBottomWidth: 1, borderColor: '#1f2937' },
+  adminText: { color: '#9ca3af', fontSize: 11 },
+  adminBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 6 },
+
+  msg: { padding: 12, marginVertical: 4, marginHorizontal: 12, borderRadius: 8, maxWidth: '80%' },
   userMsg: { backgroundColor: '#059669', alignSelf: 'flex-end' },
-  aiMsg: { backgroundColor: '#18181b', alignSelf: 'start', borderWidth: 1, borderColor: '#27272a' },
-  inputBar: { flexDirection: 'row', padding: 10, borderTopWidth: 1, borderColor: '#18181b', gap: 6, alignItems: 'center' },
+  aiMsg: { backgroundColor: '#18181b', alignSelf: 'flex-start', borderWidth: 1, borderColor: '#27272a' },
+
+  inputBar: { flexDirection: 'row', padding: 12, borderTopWidth: 1, borderColor: '#18181b', gap: 8, alignItems: 'center' },
   resetBtn: { backgroundColor: '#18181b', padding: 10, borderRadius: 6, borderWidth: 1, borderColor: '#27272a' },
-  input: { flex: 1, backgroundColor: '#18181b', color: '#fff', padding: 10, borderRadius: 6, borderWidth: 1, borderColor: '#27272a', fontSize: 13 },
-  sendBtn: { backgroundColor: '#10b981', paddingHorizontal: 14, paddingVertical: 10, borderRadius: 6, justifyContent: 'center' },
+  input: { flex: 1, backgroundColor: '#18181b', color: '#fff', padding: 10, borderRadius: 6, borderWidth: 1, borderColor: '#27272a', fontSize: 14 },
+  sendBtn: { backgroundColor: '#10b981', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 6, justifyContent: 'center' },
+
   modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', padding: 20 },
   modalCard: { backgroundColor: '#18181b', padding: 16, borderRadius: 8, borderWidth: 1, borderColor: '#27272a' },
-  modalInput: { backgroundColor: '#09090b', color: '#fff', padding: 10, borderRadius: 6, height: 80, textAlignVertical: 'top', borderWidth: 1, borderColor: '#27272a' },
-  modalBtn: { padding: 8, paddingHorizontal: 12, backgroundColor: '#27272a', borderRadius: 4 }
+  modalInput: { backgroundColor: '#09090b', color: '#fff', padding: 10, borderRadius: 6, height: 90, textAlignVertical: 'top', borderWidth: 1, borderColor: '#27272a' },
+  modalBtn: { padding: 8, paddingHorizontal: 14, backgroundColor: '#27272a', borderRadius: 6 }
 });
