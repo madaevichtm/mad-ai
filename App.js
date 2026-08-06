@@ -168,13 +168,13 @@ export default function App() {
   const otpInputs = useRef([]);
   const t = TRANSLATIONS[langCode] || TRANSLATIONS.RU;
 
-  // Форсированный инжект фона прямо в DOM
+  // Инжект прозрачности и волнистого фона
   useEffect(() => {
     if (typeof document !== 'undefined') {
-      let styleTag = document.getElementById('madai-wave-theme-real');
+      let styleTag = document.getElementById('madai-wave-theme-final');
       if (!styleTag) {
         styleTag = document.createElement('style');
-        styleTag.id = 'madai-wave-theme-real';
+        styleTag.id = 'madai-wave-theme-final';
         document.head.appendChild(styleTag);
       }
       styleTag.innerHTML = `
@@ -210,11 +210,11 @@ export default function App() {
       .then(data => setUserIp(data.ip || '127.0.0.1'))
       .catch(() => setUserIp('127.0.0.1'));
 
-    const savedUsers = localStorage.getItem('madai_users_db_v10');
+    const savedUsers = localStorage.getItem('madai_users_db_v11');
     let db = savedUsers ? JSON.parse(savedUsers) : [];
     setUsersList(db);
 
-    const savedSession = localStorage.getItem('madai_current_session_v10');
+    const savedSession = localStorage.getItem('madai_current_session_v11');
     if (savedSession) {
       const parsed = JSON.parse(savedSession);
       setCurrentUser(parsed);
@@ -224,7 +224,7 @@ export default function App() {
 
   const saveUsersDb = (newDb) => {
     setUsersList(newDb);
-    localStorage.setItem('madai_users_db_v10', JSON.stringify(newDb));
+    localStorage.setItem('madai_users_db_v11', JSON.stringify(newDb));
   };
 
   const getPasswordStrength = () => {
@@ -238,6 +238,7 @@ export default function App() {
     return { label: 'Слабый', color: '#ef4444', score: 1 };
   };
 
+  // Отправка с верифицированного домена no-reply@madlinov.xyz
   const sendEmailVerification = async (targetEmail, code) => {
     try {
       await fetch('https://api.resend.com/emails', {
@@ -247,22 +248,24 @@ export default function App() {
           'Authorization': `Bearer ${RESEND_API_KEY}`
         },
         body: JSON.stringify({
-          from: 'onboarding@resend.dev',
+          from: 'MadAI <no-reply@madlinov.xyz>',
           to: [targetEmail],
-          subject: 'MadAI Verification Code',
+          subject: 'Код подтверждения регистрации MadAI',
           html: `
             <div style="background-color: #060b0e; color: #ffffff; padding: 30px; font-family: sans-serif; border-radius: 12px; border: 1px solid #10b981;">
               <h2 style="color: #10b981; margin-bottom: 10px;">MadAI Verification</h2>
-              <p style="font-size: 14px; color: #a1a1aa;">Your verification code:</p>
+              <p style="font-size: 14px; color: #a1a1aa;">Ваш 6-значный код подтверждения:</p>
               <div style="background: #0c1419; padding: 18px; border-radius: 8px; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #10b981; text-align: center; margin: 20px 0; border: 1px solid #1f2937;">
                 ${code}
               </div>
+              <p style="font-size: 12px; color: #6b7280;">Если вы не регистрировались в MadAI, просто проигнорируйте это письмо.</p>
             </div>
           `
         })
       });
       return true;
     } catch (e) {
+      console.error("Resend send error:", e);
       return false;
     }
   };
@@ -327,7 +330,7 @@ export default function App() {
 
       saveUsersDb(usersList);
       setCurrentUser(user);
-      localStorage.setItem('madai_current_session_v10', JSON.stringify(user));
+      localStorage.setItem('madai_current_session_v11', JSON.stringify(user));
       setScreen('chat');
     }
   };
@@ -338,7 +341,7 @@ export default function App() {
       const updatedDb = [...usersList, pendingUser];
       saveUsersDb(updatedDb);
       setCurrentUser(pendingUser);
-      localStorage.setItem('madai_current_session_v10', JSON.stringify(pendingUser));
+      localStorage.setItem('madai_current_session_v11', JSON.stringify(pendingUser));
       setPendingUser(null);
       setScreen('chat');
       showToast("Почта подтверждена! Добро пожаловать.");
@@ -358,7 +361,7 @@ export default function App() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('madai_current_session_v10');
+    localStorage.removeItem('madai_current_session_v11');
     setCurrentUser(null);
     setScreen('landing');
   };
@@ -370,7 +373,7 @@ export default function App() {
         const newObj = { ...u, role: nextRole };
         if (currentUser && currentUser.id === targetId) {
           setCurrentUser(newObj);
-          localStorage.setItem('madai_current_session_v10', JSON.stringify(newObj));
+          localStorage.setItem('madai_current_session_v11', JSON.stringify(newObj));
         }
         return newObj;
       }
@@ -435,7 +438,6 @@ export default function App() {
     }
   };
 
-  // Выбор языка с переведённой плашкой
   const LanguageSelector = () => {
     return (
       <TouchableOpacity 
@@ -862,7 +864,7 @@ const styles = StyleSheet.create({
     left: 0, 
     right: 0, 
     flexDirection: 'row', 
-    justifyContent: 'space-between', 
+    justify: 'space-between', 
     alignItems: 'center',
     paddingVertical: 20, 
     paddingHorizontal: 40,
