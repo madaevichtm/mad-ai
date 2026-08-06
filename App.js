@@ -17,9 +17,9 @@ const LANGUAGES = [
   { code: 'ZH', name: '中文' },
 ];
 
-// Словарь переводов
 const TRANSLATIONS = {
   RU: {
+    langBtnLabel: "Язык",
     heroSub: "Твой личный ИИ-арсенал. Премиум-доступ для всех. Скрытая мощь, доступная каждому.",
     startBtn: "Начать →",
     advantagesTitle: "ПРЕИМУЩЕСТВА MadAI",
@@ -36,6 +36,7 @@ const TRANSLATIONS = {
     loginAccount: "Войти в аккаунт",
   },
   EN: {
+    langBtnLabel: "Language",
     heroSub: "Your personal AI arsenal. Premium access for everyone. Hidden power available to all.",
     startBtn: "Get Started →",
     advantagesTitle: "MadAI ADVANTAGES",
@@ -52,6 +53,7 @@ const TRANSLATIONS = {
     loginAccount: "Log In",
   },
   ES: {
+    langBtnLabel: "Idioma",
     heroSub: "Tu arsenal personal de IA. Acceso premium para todos. Poder oculto al alcance de cualquiera.",
     startBtn: "Empezar →",
     advantagesTitle: "VENTAJAS DE MadAI",
@@ -60,7 +62,7 @@ const TRANSLATIONS = {
     card2Title: "PRIVACIDAD ABSOLUTA.",
     card2Desc: "Anonimato completo. Tus consultas se quedan en las sombras. Cero registros.",
     card3Title: "CALIBRACIÓN PROFUNDA.",
-    card3Desc: "Ajusta la IA sin filtros corporativos ocultos. Libredad total y rendimiento puro.",
+    card3Desc: "Ajusta la IA sin filtros corporativos ocultos. Libertad total y rendimiento puro.",
     privacy: "Política de privacidad",
     terms: "Términos de uso",
     selectLangModal: "Seleccionar idioma",
@@ -68,6 +70,7 @@ const TRANSLATIONS = {
     loginAccount: "Iniciar sesión",
   },
   DE: {
+    langBtnLabel: "Sprache",
     heroSub: "Ihr persönliches KI-Arsenal. Premium-Zugang für alle. Verborgene Kraft für jeden verfügbar.",
     startBtn: "Starten →",
     advantagesTitle: "VORTEILE VON MadAI",
@@ -84,6 +87,7 @@ const TRANSLATIONS = {
     loginAccount: "Anmelden",
   },
   FR: {
+    langBtnLabel: "Langue",
     heroSub: "Votre arsenal d'IA personnel. Accès premium pour tous. Une puissance cachée accessible à tous.",
     startBtn: "Commencer →",
     advantagesTitle: "AVANTAGES DE MadAI",
@@ -100,6 +104,7 @@ const TRANSLATIONS = {
     loginAccount: "Se connecter",
   },
   ZH: {
+    langBtnLabel: "语言",
     heroSub: "您的专属人工智能军库。人人享有高级权限。每个人都能触及的隐藏力量。",
     startBtn: "开始体验 →",
     advantagesTitle: "MadAI 核心优势",
@@ -163,30 +168,31 @@ export default function App() {
   const otpInputs = useRef([]);
   const t = TRANSLATIONS[langCode] || TRANSLATIONS.RU;
 
-  // Инжект фона и убираем дублирование скроллбаров
+  // Форсированный инжект фона прямо в DOM
   useEffect(() => {
     if (typeof document !== 'undefined') {
-      let styleTag = document.getElementById('madai-wave-theme-final');
+      let styleTag = document.getElementById('madai-wave-theme-real');
       if (!styleTag) {
         styleTag = document.createElement('style');
-        styleTag.id = 'madai-wave-theme-final';
+        styleTag.id = 'madai-wave-theme-real';
         document.head.appendChild(styleTag);
       }
       styleTag.innerHTML = `
-        html, body, #root {
-          background-color: #03060a !important;
+        html, body, #root, [data-reactroot] {
+          background-color: transparent !important;
+          background: #03060a !important;
           margin: 0;
           padding: 0;
-          height: 100%;
-          overflow-x: hidden;
+          min-height: 100vh;
         }
         body {
           background-image: 
-            radial-gradient(circle at 50% 25%, rgba(14, 45, 55, 0.55) 0%, rgba(3, 6, 10, 0.98) 75%),
-            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='1200' viewBox='0 0 1200 1200'%3E%3Cpath fill='none' stroke='%2310b981' stroke-width='0.6' opacity='0.25' d='M0,200 C300,100 600,350 1200,150 M0,450 C400,200 800,600 1200,400 M0,750 C500,550 900,850 1200,700' /%3E%3Cpath fill='none' stroke='%2338bdf8' stroke-width='0.4' opacity='0.18' d='M0,300 C400,500 800,150 1200,350' /%3E%3Ccircle cx='250' cy='220' r='1.5' fill='%2310b981' opacity='0.4'/%3E%3Ccircle cx='850' cy='380' r='2' fill='%2310b981' opacity='0.3'/%3E%3Ccircle cx='600' cy='720' r='1.5' fill='%2338bdf8' opacity='0.35'/%3E%3C/svg%3E") !important;
+            radial-gradient(circle at 50% 20%, rgba(14, 45, 55, 0.65) 0%, rgba(3, 6, 10, 0.98) 75%),
+            url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1200' height='1200' viewBox='0 0 1200 1200'%3E%3Cpath fill='none' stroke='%2310b981' stroke-width='0.7' opacity='0.3' d='M0,200 C300,100 600,350 1200,150 M0,450 C400,200 800,600 1200,400 M0,750 C500,550 900,850 1200,700' /%3E%3Cpath fill='none' stroke='%2338bdf8' stroke-width='0.5' opacity='0.22' d='M0,300 C400,500 800,150 1200,350' /%3E%3Ccircle cx='250' cy='220' r='1.5' fill='%2310b981' opacity='0.5'/%3E%3Ccircle cx='850' cy='380' r='2' fill='%2310b981' opacity='0.4'/%3E%3Ccircle cx='600' cy='720' r='1.5' fill='%2338bdf8' opacity='0.4'/%3E%3C/svg%3E") !important;
           background-repeat: no-repeat, repeat !important;
           background-position: center top, center center !important;
           background-size: cover, 1000px 1000px !important;
+          background-attachment: fixed !important;
         }
       `;
     }
@@ -204,11 +210,11 @@ export default function App() {
       .then(data => setUserIp(data.ip || '127.0.0.1'))
       .catch(() => setUserIp('127.0.0.1'));
 
-    const savedUsers = localStorage.getItem('madai_users_db_v9');
+    const savedUsers = localStorage.getItem('madai_users_db_v10');
     let db = savedUsers ? JSON.parse(savedUsers) : [];
     setUsersList(db);
 
-    const savedSession = localStorage.getItem('madai_current_session_v9');
+    const savedSession = localStorage.getItem('madai_current_session_v10');
     if (savedSession) {
       const parsed = JSON.parse(savedSession);
       setCurrentUser(parsed);
@@ -218,7 +224,7 @@ export default function App() {
 
   const saveUsersDb = (newDb) => {
     setUsersList(newDb);
-    localStorage.setItem('madai_users_db_v9', JSON.stringify(newDb));
+    localStorage.setItem('madai_users_db_v10', JSON.stringify(newDb));
   };
 
   const getPasswordStrength = () => {
@@ -321,7 +327,7 @@ export default function App() {
 
       saveUsersDb(usersList);
       setCurrentUser(user);
-      localStorage.setItem('madai_current_session_v9', JSON.stringify(user));
+      localStorage.setItem('madai_current_session_v10', JSON.stringify(user));
       setScreen('chat');
     }
   };
@@ -332,7 +338,7 @@ export default function App() {
       const updatedDb = [...usersList, pendingUser];
       saveUsersDb(updatedDb);
       setCurrentUser(pendingUser);
-      localStorage.setItem('madai_current_session_v9', JSON.stringify(pendingUser));
+      localStorage.setItem('madai_current_session_v10', JSON.stringify(pendingUser));
       setPendingUser(null);
       setScreen('chat');
       showToast("Почта подтверждена! Добро пожаловать.");
@@ -352,7 +358,7 @@ export default function App() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('madai_current_session_v9');
+    localStorage.removeItem('madai_current_session_v10');
     setCurrentUser(null);
     setScreen('landing');
   };
@@ -364,7 +370,7 @@ export default function App() {
         const newObj = { ...u, role: nextRole };
         if (currentUser && currentUser.id === targetId) {
           setCurrentUser(newObj);
-          localStorage.setItem('madai_current_session_v9', JSON.stringify(newObj));
+          localStorage.setItem('madai_current_session_v10', JSON.stringify(newObj));
         }
         return newObj;
       }
@@ -429,7 +435,7 @@ export default function App() {
     }
   };
 
-  // Красивый кастомный выбор языка
+  // Выбор языка с переведённой плашкой
   const LanguageSelector = () => {
     return (
       <TouchableOpacity 
@@ -438,7 +444,7 @@ export default function App() {
         onPress={() => setLangModalVisible(true)}
       >
         <Text style={{ color: '#ffffff', fontSize: 13, fontWeight: 'bold' }}>
-          🌐 Язык: {langCode}
+          🌐 {t.langBtnLabel}: {langCode}
         </Text>
       </TouchableOpacity>
     );
@@ -504,7 +510,6 @@ export default function App() {
           </View>
         </View>
 
-        {/* СТИЛЬНАЯ МОДАЛКА ВЫБОРА ЯЗЫКА */}
         <Modal visible={langModalVisible} transparent animationType="fade">
           <View style={styles.modalOverlay}>
             <View style={styles.langModalCard}>
@@ -818,10 +823,7 @@ const styles = StyleSheet.create({
     borderRadius: 20, 
     borderWidth: 1, 
     borderColor: '#1e293b',
-    alignSelf: 'flex-start',
-    shadowColor: '#38bdf8',
-    shadowRadius: 10,
-    shadowOpacity: 0.2
+    alignSelf: 'flex-start'
   },
 
   heroSection: { alignItems: 'center', marginVertical: 35, maxWidth: 700, width: '100%' },
@@ -829,15 +831,12 @@ const styles = StyleSheet.create({
   heroSub: { color: '#9ca3af', fontSize: 16, textAlign: 'center', marginVertical: 22, lineHeight: 26, maxWidth: 620 },
   
   heroButtonGlow: { 
-    backgroundColor: '#071217', 
+    backgroundColor: 'rgba(7, 18, 23, 0.8)', 
     paddingHorizontal: 36, 
     paddingVertical: 12, 
     borderRadius: 8, 
     borderWidth: 1, 
     borderColor: '#22d3ee', 
-    shadowColor: '#22d3ee',
-    shadowRadius: 18,
-    shadowOpacity: 0.35,
     alignItems: 'center' 
   },
   heroButtonText: { color: '#ffffff', fontWeight: 'bold', fontSize: 15 },
@@ -851,10 +850,7 @@ const styles = StyleSheet.create({
     borderRadius: 12, 
     borderWidth: 1, 
     borderColor: 'rgba(255, 255, 255, 0.08)', 
-    width: 320,
-    shadowColor: '#000',
-    shadowRadius: 12,
-    shadowOpacity: 0.3
+    width: 320
   },
   cardIcon: { fontSize: 24, marginBottom: 14 },
   cardTitle: { color: '#ffffff', fontWeight: 'bold', fontSize: 13, letterSpacing: 1, marginBottom: 10 },
